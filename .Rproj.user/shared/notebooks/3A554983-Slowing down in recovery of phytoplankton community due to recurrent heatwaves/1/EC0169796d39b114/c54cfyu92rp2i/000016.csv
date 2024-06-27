@@ -1,0 +1,8 @@
+"0","# Summarize the data for plotting
+tot_bray_dynamics <- tot.bray_diff %>%
+  group_by(Treatment, Day) %>%
+  summarize(mean_diff_bray = mean(diff_bray, na.rm = TRUE), se = se(diff_bray)) %>%
+  mutate(lower_y = mean_diff_bray - se, upper_y = mean_diff_bray + se)
+"
+"1","[38;5;250m`summarise()` has grouped output by 'Treatment'. You can override using the `.groups` argument.[39m
+"

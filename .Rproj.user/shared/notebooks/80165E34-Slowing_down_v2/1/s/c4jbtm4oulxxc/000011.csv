@@ -1,0 +1,7 @@
+"0","# Create a tidy summary"
+"0","tidy_summary <- tidy(model_ox)"
+"0","# Print the summary in RMarkdown with kableExtra for formatting"
+"0","tidy_summary %>%"
+"0","  mutate(across(where(is.numeric), ~ round(., 3))) %>%"
+"0","  kable(format = ""html"", escape = FALSE) %>%"
+"0","  kable_styling(full_width = FALSE)"

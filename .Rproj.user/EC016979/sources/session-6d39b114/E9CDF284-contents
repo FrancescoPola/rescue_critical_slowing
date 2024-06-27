@@ -1,0 +1,743 @@
+---
+title: "Slowing down in recovery of phytoplankton community due to recurrent heatwaves"
+author: "Francesco Polazzo"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    code_folding: hide
+    keep_md: yes
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      include = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      cache = FALSE)
+```
+
+```{r results='hide'}
+rm(list = ls())
+library(tidyverse)
+library(readxl)
+library(patchwork)
+library(vegan)
+library(emmeans)
+library(lme4)
+library(lmerTest)
+library(performance)
+library(knitr)
+```
+
+# Introduction
+
+With this paper (?) we wanted to test two major ecological framework that are commonly applied to systems facing repeted perturbations: 
+
+- Critical slowing down (https://www.journals.uchicago.edu/doi/full/10.1086/516845) (https://www.nature.com/articles/nature10723)
+
+- Community rescue (https://www.nature.com/articles/s41559-020-1134-5)
+
+For this we used data coming from an outdoor pond mesocosm experiment (2021 Spain) where a semi-natural phytoplankton community was exposed to three subsequent heatwaves. Heatwaves are becoming more frequent and more intense, rising concerns about whether and how natural communities can face these perturbations and keep performing their functions. Critically, increasing research is suggesting that heatwaves can cause ecological systems to transition.
+
+This transitions, also called tipping points, represent particular points at which complex systems can shift abruptly from one state to another, and they are notoriously difficult to predict.
+Attention has thus turned to inferring process from pattern – identifying phenomenological signals in measurable aspect of a biological system that indicates shifts in the under-lying processes that may alter the structure and function of the system. A key development in the search for such pattern-based indicators is early warning signals (EWSs) derived from dynamic systems theory (all Scheffer's papers)
+
+Theory proposes that early warning signals may be based on the phenomenon that recovery rates from perturbations should tend to zero when approaching a tipping point. However, evidence that this happens in living systems is scarce (at best).
+
+
+
+Community rescue occurs when ecological or evolutionary processes restore positive growth in a highly stressful environment that was lethal to the community in its ancestral form, thus averting biomass collapse in a deteriorating environment. Very few empirical examples exist about community rescue, yet it is though to be one key mechanism that increases stress resistance in communities and contribute maintaining aggregate community properties such as biomass under stressful conditions.
+
+Here we test whether a semi-natural phytoplankton community undergoing repeated heatwave perturbation shows signs of critical slowing down or community rescue. 
+
+# Material and methods
+
+I just want to mention that I am using only data up to day 38 because I want the same amount of time after each heatwave to compare the recovery after heatwaves. So no longer recovery is assessed and all data points after are likely not going to be used.
+
+# Results
+## Abundance dynamics
+```{r results='hide'}
+dd_abu <- read_excel("data/abundance_cosm.xlsx")
+
+
+tot.abu <- dd_abu[, c(1:6)]
+tot.abu<-as.data.frame(tot.abu) 
+tot.abu$total.abu<- rowSums(dd_abu[, c(7:94)])
+
+tot.abu <- tot.abu %>% filter(Treatment != "E/C0",
+                              Day <= 38)
+### Log10 abundance
+tot.abu$tot.abu_log <- log10(tot.abu$total.abu+1)
+
+
+# Function to calculate standard error
+se <- function(x) sqrt(var(x, na.rm = TRUE) / length(na.omit(x)))
+
+# Calculate mean abundance and standard error for Control
+control_mean <- tot.abu %>% filter(Treatment == "Control") %>%
+  group_by(Day) %>%
+  summarize(control_mean_abu = mean(tot.abu_log, na.rm = TRUE))
+
+# Calculate differences from Control for each treatment
+tot.abu_diff <- tot.abu %>%
+  left_join(control_mean, by = "Day") %>%
+  mutate(diff_abu = tot.abu_log - control_mean_abu)
+
+# Summarize the data for plotting
+tot_abu_dynamics <- tot.abu_diff %>%
+  group_by(Treatment, Day) %>%
+  summarize(mean_diff_abu = mean(diff_abu, na.rm = TRUE), se = se(diff_abu)) %>%
+  mutate(lower_y = mean_diff_abu - se, upper_y = mean_diff_abu + se)
+
+# Determine the y-axis limits to ensure alignment of zero line
+y_limits <- range(tot_abu_dynamics$mean_diff_abu + tot_abu_dynamics$se, 
+                  tot_abu_dynamics$mean_diff_abu - tot_abu_dynamics$se)
+
+# Filter out the control treatment for the plot
+
+abundance_plot <- ggplot(tot_abu_dynamics, aes(x = Day, y = mean_diff_abu, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_point()+
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab("Phytoplankton \nDifference in ln(abundance) (ind/mesocosm)") +
+  xlab("Day") +
+  viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  viridis::scale_fill_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  scale_x_continuous(limits = c(-5, 40)) +
+  theme(legend.position = "top") +
+  theme_bw() +
+  guides(fill = guide_legend(override.aes = list(size = 8), ncol = 6)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_cartesian(ylim = y_limits) +  # Set the y-axis limits to align the zero line
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red")+
+  theme(legend.position = "none")
+
+```
+
+Plankton abundance shows an initial decline after the first HW. the second HW causes a further reduction in abundance, but a slight recovery, although incomplete, is achieved after the second HW. Yet, after the third heatwave, we see a collapse in plankton abundance, both during as well as immediately after the last heatwave. The missing recovery here suggests that recurrent heatwave can increasingly slow down the recovery of phytoplankton abundance. Momentarely plotting also the variability of the control, will remove.
+
+```{r abundance_plot, fig.cap= 'Biomass dynamics over time. The red areas show the three heatwaves', fig.align="center", fig.height=6, fig.width=10}
+
+ abundance_plot
+```
+
+Let us look into this results.
+To analyze whether the heatwaves have a significant effect on the phytoplankton abundance, we can use a mixed-effects model. Mixed-effects models are suitable for time series data with repeated measures, as they can account for both fixed effects (e.g., HWs) and random effects (e.g., mesocosms).
+
+Including time as a variable in the model is generally more powerful and informative than analyzing each time point separately for several reasons:
+
+Increased Statistical Power:
+
+Pooling Information: Including time allows you to leverage all the data points across the time series, increasing the statistical power of your analysis.
+Detecting Trends: It enables you to detect trends and changes over time, which can provide more insight into the dynamic effects of treatments.
+
+Handling Repeated Measures  through random Effects: By using mixed-effects models, you can account for the repeated measures within each mesocosm, which is essential for correctly handling the correlation between measurements from the same mesocosm.
+
+Interaction Effects:
+Time-Treatment Interaction: You can examine the interaction between time and treatment to see if the treatment effect changes over time.
+
+The model for abundance
+```{r}
+
+model_abu <- lmer(tot.abu_log ~ Treatment * Day + (1 | Sample), data = tot.abu)
+summary(model_abu)
+```
+
+Significant effect of HWs and interaction between HW and Time.
+
+Model diagnostics
+```{r check_abu_model, fig.cap= 'Checking assumption for abundance model', fig.align="center", fig.height=12, fig.width=10}
+check_model(model_abu)
+```
+Nothing too bad here.
+
+
+Post - hoc analysis. Let see when the HW treatment had a significant impact on phyto abundance
+```{r}
+# Specify the days you are interested in for post-hoc comparisons
+days_of_interest <- unique(tot.abu$Day)  # You can also specify specific days manually, e.g., c(1, 5, 10, 15)
+
+# Perform post-hoc analysis with specified days
+emm_abu <- emmeans(model_abu, ~ Treatment | Day, at = list(Day = days_of_interest))
+post_hoc_results_abu <- pairs(emm_abu)
+# Convert post_hoc_results to a data frame
+post_hoc_df_abu <- as.data.frame(post_hoc_results_abu)
+
+# Print the results using kable
+kable(post_hoc_df_abu, format = "markdown")
+```
+
+Visualization of model prediction (linear trend)
+```{r}
+# Visualization 
+emmip(model_abu, Treatment ~ Day, at = list(Day = days_of_interest), CIs = TRUE)
+
+```
+
+
+## Compositional dynamics
+```{r results='hide', echo = FALSE, warning=FALSE}
+### Bray-Curtis dissimilarity calculation ###
+dd_bray <- read_excel("data/abundance_cosm.xlsx")
+dd_bray[is.na(dd_bray)] <- 0
+
+dd_bray <- as.data.frame(dd_bray)
+dd_bray <- dd_bray %>% filter(Treatment %in% c("HW/C0", "Control"),
+                              Day <= 38)
+days_FR <- unique(dd_bray$Day)
+
+
+
+# Include running index "m", set it to 1 
+
+m <- 1
+
+
+
+for (j in 1:length(days_FR)){  ## inner loop for days
+  
+  # Extract data for one single day
+  
+  mysite <- dd_bray %>% 
+    filter( Day == days_FR[j])
+  
+  # Add row names to the data frame, useful later for the Bray-Curtis calculation
+  
+  rownames(mysite) <- paste(mysite$Treatment, mysite$Sample, mysite$Day, sep = "_")
+  
+  # Extract controls 
+  
+  control_cosm <- mysite %>% 
+    filter(Treatment == "Control")
+  
+  # Calculate average community composition (average abundance of each group/column)
+  # Important: only columns with species are included 
+  # ref.comm.all => includes all species
+  
+  
+  ref.comm.all <- control_cosm[,c(7:94)] %>% summarise_each(funs( mean( .,na.rm = TRUE)))
+  rownames(ref.comm.all) <- "REF.COMM.ALL"
+  
+  
+  # Add the reference community to your site
+  
+  z.all <- rbind(mysite[,c(7:94)], ref.comm.all)
+  
+  # Calculate Bray-Curtis Dissimilarity using the function vegdist
+  
+  # Matrix of all Bray-Curtis Dissimilarities
+  
+  calc.BC.all <- as.matrix(vegdist(z.all, method = "bray", binary = F, na.rm = T))
+  
+  # Extract just the last column containing the pairwise comparison of each plot 
+  # to the average control community composition
+  
+  BC.mean.C.all <- calc.BC.all[1:8,"REF.COMM.ALL"]
+  
+  
+  # Add the BCs to the mysite dataset
+  
+  mysite$BC_meanC_all <- BC.mean.C.all
+  
+  
+  # This is optional: add the names from the BC vectors to mysite 
+  # to be sure you extracted the correct comparions of single communities to REF.COMM.
+  
+  mysite$community_all <- names(BC.mean.C.all)
+  
+  
+  if (m == 1){
+    df.sites <- mysite
+  }
+  
+  if (m > 1){
+    df.sites <- rbind(df.sites,mysite)
+  }
+  
+  # Increase m (the running index) by 1
+  
+  m <- m + 1
+}
+
+df.sites_phyto <-  df.sites 
+
+
+Bray_Curtis_distances_phyto <- df.sites_phyto[,c(1:6,95:96)]
+
+
+
+# Function to calculate standard error
+se <- function(x) sqrt(var(x, na.rm = TRUE) / length(na.omit(x)))
+
+# Calculate mean abundance and standard error for Control
+control_mean_bray <- Bray_Curtis_distances_phyto %>% filter(Treatment == "Control") %>%
+  group_by(Day) %>%
+  summarize(control_mean_bray = mean(BC_meanC_all, na.rm = TRUE))
+
+# Calculate differences from Control for each treatment
+tot.bray_diff <- Bray_Curtis_distances_phyto %>%
+  left_join(control_mean_bray, by = "Day") %>%
+  mutate(diff_bray = BC_meanC_all - control_mean_bray)
+
+# Summarize the data for plotting
+tot_bray_dynamics <- tot.bray_diff %>%
+  group_by(Treatment, Day) %>%
+  summarize(mean_diff_bray = mean(diff_bray, na.rm = TRUE), se = se(diff_bray)) %>%
+  mutate(lower_y = mean_diff_bray - se, upper_y = mean_diff_bray + se)
+
+
+tot_bray_dynamics <- tot_bray_dynamics %>% mutate(mean_diff_bray = (mean_diff_bray* -1),
+                                                  lower_y = (lower_y * -1),
+                                                  upper_y = (upper_y * -1))
+
+# Determine the y-axis limits to ensure alignment of zero line
+y_limits <- range(tot_bray_dynamics$mean_diff_bray + tot_bray_dynamics$se, 
+                  tot_bray_dynamics$mean_diff_bray - tot_bray_dynamics$se)
+
+# Filter out the control treatment for the plot
+# tot_bray_dynamics_filtered <- tot_bray_dynamics %>% filter(Treatment == "HW/C0")
+# data_bray <- tot_bray_dynamics_filtered %>% filter(Day <= 38)
+
+bray_plot <- ggplot(tot_bray_dynamics, aes(x = Day, y = mean_diff_bray, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_point()+
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab("Phytoplankton \nDifference in Bray - Curtis dissimilarity") +
+  xlab("Day") +
+  viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  viridis::scale_fill_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  scale_x_continuous(limits = c(-5, 40)) +
+  theme(legend.position = "top") +
+  theme_bw() +
+  guides(fill = guide_legend(override.aes = list(size = 8), ncol = 6)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_cartesian(ylim = y_limits) +  # Set the y-axis limits to align the zero line
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  theme(legend.position = "none")
+
+```
+
+Compositional dynamics almost mirror abundance dynamics. The abundance slight recovery after the second heatwave is associated with a compositional change that made the community similar to the control one. However, since this community was previously exposed to a heatwave, it perform "less" than the control. Indeed, despite a similar composition, total abundance is significantly lower in HW cosms compared to the control (new dynamic behind slowing down?). The third heatwave though determined a strong compositional shift that does not show signs of recovery, and results in a huge abundance drop.
+
+```{r composition_plot, fig.cap='Bray - Curtis dynamics over time. The red areas show the three heatwaves', fig.align="center", fig.height=6, fig.width=10}
+
+ bray_plot
+```
+
+NMDS plot
+```{r echo = FALSE, composition_plot_NMDS, fig.cap='Non-Metric Multidimensional Scaling plot of compositional dynamics over time.', fig.align="center", fig.height=6, fig.width=15}
+### NMDS
+
+dd_bray <- dd_bray[,-c(1,4:6)]
+
+species_data <- dd_bray[, -(1:2)]  # Assuming the first two columns are Day and Treatment
+bray_curtis_dist <- vegdist(species_data, method = "bray")
+
+# Function to calculate NMDS and prepare data for plotting
+prepare_nmds_data <- function(day_data) {
+  species_data <- day_data[, -(1:2)]  # Assuming the first two columns are Day and Treatment
+  bray_curtis_dist <- vegdist(species_data, method = "bray")
+  nmds_result <- metaMDS(bray_curtis_dist, k = 2, trymax = 100)
+  ordination_df <- as.data.frame(nmds_result$points)
+  ordination_df$Treatment <- day_data$Treatment
+  return(ordination_df)
+}
+
+# List to store ordination data frames for each day
+ordination_list <- lapply(unique(dd_bray$Day), function(day) {
+  day_data <- dd_bray %>% filter(Day == day)
+  ordination_df <- prepare_nmds_data(day_data)
+  ordination_df$Day <- day
+  return(ordination_df)
+})
+
+# Combine all ordination data frames into one
+combined_ordination_df <- do.call(rbind, ordination_list)
+
+
+
+# Define the layout for 3 rows and 5 columns
+num_rows <- 3
+num_cols <- 5
+
+# Plot with polygons for each treatment
+ggplot(combined_ordination_df, aes(x = MDS1, y = MDS2, fill = Treatment, group = interaction(Treatment, Day))) +
+  geom_polygon(alpha = 0.5, color = "black") +
+  geom_point(size = 3, aes(color = Treatment)) +
+  labs(x = "NMDS Axis 1", y = "NMDS Axis 2", color = "Treatment", fill = "Treatment") +
+  theme_bw() +
+  ggtitle("Compositional Change of Phytoplankton Community Over Time") +
+  facet_wrap(~ Day, nrow = num_rows, ncol = num_cols, scales = "free")
+
+```
+
+
+PERANOVA
+
+```{r echo=FALSE}
+# Wrangling
+dd_bray <- dd_bray[, -(4:6)]
+day =10
+# PERMANOVA per day
+day_results <- lapply(unique(dd_bray$Day), function(day) {
+  subset_data <- dd_bray %>% filter(Day == day)
+  species_data <- subset_data[, 4:ncol(subset_data)]  # Extract species abundance columns
+  bray_curtis_dist <- vegdist(species_data, method = "bray", binary = FALSE, na.rm = TRUE)  # Calculate Bray-Curtis dissimilarity
+  adonis_result <- adonis2(bray_curtis_dist ~ Treatment, data = subset_data, permutations = 999)
+  result <- list(Day = day, PERMANOVA_result = adonis_result)
+  print(result)
+  return(result)
+})
+
+# # Convert the list of results into a data frame
+# day_results_df <- do.call(rbind, day_results)
+# 
+# # Add the "Day" column as row names
+# rownames(day_results_df) <- day_results_df$Day
+# 
+# # Remove the "Day" column
+# day_results_df <- day_results_df[, -1]
+# 
+# # Limit the number of decimals
+# day_results_df$p_value <- format(day_results_df$p_value, digits = 3)
+# 
+# # Add a column indicating the day
+# day_results_df$Day <- rownames(day_results_df)
+# 
+# # Print the results as a nice table using pander
+# pander(day_results_df, caption = "PERMANOVA Results by Day")
+
+```
+
+```{r echo=FALSE}
+# Calculate PERMANOVA for each day
+day_results <- lapply(unique(dd_bray$Day), function(day) {
+  subset_data <- dd_bray %>% filter(Day == day)
+  species_data <- subset_data[, 4:ncol(subset_data)]  # Extract species abundance columns
+  bray_curtis_dist <- vegdist(species_data, method = "bray", binary = FALSE, na.rm = TRUE)  # Calculate Bray-Curtis dissimilarity
+  adonis_result <- adonis2(bray_curtis_dist ~ Treatment, data = subset_data, permutations = 999)
+  result <- list(Day = day, PERMANOVA_result = adonis_result)
+  return(result)
+})
+
+day_results
+
+```
+
+
+Significant effect of HWs on composition on days 10, 30, and 38
+
+
+## Ecosystem functioning endpoints
+
+### Dissolved oxygen 
+
+```{r results='hide', echo = FALSE}
+dd <- read_excel("data/DataMesocosms2021.xlsx", 
+                 sheet = "Metabolism Morning")
+
+dd_add <- read_excel("data/Additional_metabolism_phyto.xlsx")
+
+
+# get only ox and rename
+
+ox_add <- dd_add[, c(1:4,8)]
+ox_add <- ox_add %>% rename(ox = "DO (mg/L)" )
+
+
+ox <- dd[, c(1:4,8)]
+ox <- ox %>% rename(ox = "DO (mg/L)" )
+
+ox <- rbind(ox, ox_add)
+# remove unwanted treatments
+
+ox <- ox %>% filter(Treatment %in% c("CO/HW", "CO/A"),
+                              Day <= 38)
+
+# Calculate mean abundance and standard error for Control
+control_mean <- ox %>% filter(Treatment == "CO/A") %>%
+  group_by(Day) %>%
+  summarize(control_mean_ox = mean(ox, na.rm = TRUE))
+
+# Calculate differences from Control for each treatment
+tot.ox_diff <- ox %>%
+  left_join(control_mean, by = "Day") %>%
+  mutate(diff_ox = ox - control_mean_ox)
+
+# Summarize the data for plotting
+tot_ox_dynamics <- tot.ox_diff %>%
+  group_by(Treatment, Day) %>%
+  summarize(mean_diff_ox = mean(diff_ox, na.rm = TRUE), se = se(diff_ox)) %>%
+  mutate(lower_y = mean_diff_ox - se, upper_y = mean_diff_ox + se)
+
+# Determine the y-axis limits to ensure alignment of zero line
+y_limits <- range(tot_ox_dynamics$mean_diff_ox + tot_ox_dynamics$se, 
+                  tot_ox_dynamics$mean_diff_ox - tot_ox_dynamics$se)
+
+# Filter out the control treatment for the plot
+tot_ox_dynamics_filtered <- tot_ox_dynamics %>% filter(Treatment == "CO/HW")
+
+# Plot the data with faceting and aligned y-axis
+ox_plot <- ggplot(tot_ox_dynamics_filtered, aes(x = Day, y = mean_diff_ox, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab("Dissolved oxigen \nDifference in mg/L") +
+  xlab("Day") +
+  viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  viridis::scale_fill_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  scale_x_continuous(limits = c(-5, 40)) +
+  theme(legend.position = "top") +
+  theme_bw() +
+  guides(fill = guide_legend(override.aes = list(size = 8), ncol = 6)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_cartesian(ylim = y_limits) + 
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  theme(legend.position = "none")
+```
+Oxygen, again, shows an impaired recovery after the third heatwave. The contrast with the first two heatwave is striking. Indeed, the first two heatwaves determined a decline in DO only while happening, with DO quickly returning to levels higher than the control. The third heatwave strongly decreased DO during its course, and slowed down its recovery in the post HW phase so that it never got back to control levels.
+```{r oxygen_plot, fig.cap='Dissolved oxygen dynamics over time. The red areas show the three heatwaves', fig.align="center", fig.height=6, fig.width=10}
+
+ ox_plot
+```
+
+
+```{r}
+
+model_ox <- lmer(log(ox) ~ Treatment * Day + (1 | Cosm), data = ox)
+summary(model_ox)
+```
+Model diagnostics
+```{r check_ox_model, fig.cap= 'Checking assumption for oxygen model', fig.align="center", fig.height=12, fig.width=10}
+check_model(model_ox)
+```
+All good.
+
+
+Post - hoc analysis. Let see when the HW treatment had a significant impact on phyto abundance
+```{r}
+# Specify the days you are interested in for post-hoc comparisons
+days_of_interest <- unique(ox$Day)  # You can also specify specific days manually, e.g., c(1, 5, 10, 15)
+
+# Perform post-hoc analysis with specified days
+emm_ox <- emmeans(model_ox, ~ Treatment | Day, at = list(Day = days_of_interest))
+post_hoc_results_ox <- pairs(emm_ox)
+# Convert post_hoc_results to a data frame
+post_hoc_df_ox <- as.data.frame(post_hoc_results_ox)
+
+# Order the results by the 'Day' column
+post_hoc_df_ox <- post_hoc_df_ox %>% arrange(Day)
+
+# Print the results using kable with limited number of decimals
+kable(post_hoc_df_ox %>% mutate_if(is.numeric, ~round(., 3)), format = "markdown")
+```
+
+Visualization of model prediction (linear trend)
+```{r}
+# Visualization 
+emmip(model_abu, Treatment ~ Day, at = list(Day = days_of_interest), CIs = TRUE)
+
+```
+
+### Chlorophyll - a
+```{r results='hide', echo = FALSE}
+
+dd <- read_excel("data/DataMesocosms2021.xlsx", 
+                 sheet = "Metabolism Evening")
+
+dd_add <- read_excel("data/Additional_metabolism_phyto.xlsx")
+
+
+# get only chla and rename
+
+chla_add <- dd_add[, c(1:4,13)]
+chla_add <- chla_add %>% rename(chla = "chla (µg/L)" )
+
+
+chla <- dd[, c(1:4,13)]
+chla <- chla %>% rename(chla = "chla (µg/L)" )
+
+chla <- rbind(chla, chla_add)
+# remove unwanted treatments
+chla <- chla %>% filter(Treatment %in% c("CO/HW", "CO/A"),
+                              Day <= 38)
+
+### Log10 chla
+chla$chla_log <- log10(chla$chla+1)
+
+
+# Calculate mean abundance and standard error for Control
+control_mean <- chla %>% filter(Treatment == "CO/A") %>%
+  group_by(Day) %>%
+  summarize(control_mean_chla = mean(chla, na.rm = TRUE))
+
+# Calculate differences from Control for each treatment
+tot.chla_diff <- chla %>%
+  left_join(control_mean, by = "Day") %>%
+  mutate(diff_chla = chla - control_mean_chla)
+
+# Summarize the data for plotting
+tot_chla_dynamics <- tot.chla_diff %>%
+  group_by(Treatment, Day) %>%
+  summarize(mean_diff_chla = mean(diff_chla, na.rm = TRUE), se = se(diff_chla)) %>%
+  mutate(lower_y = mean_diff_chla - se, upper_y = mean_diff_chla + se)
+
+# Determine the y-axis limits to ensure alignment of zero line
+y_limits <- range(tot_chla_dynamics$mean_diff_chla + tot_chla_dynamics$se, 
+                  tot_chla_dynamics$mean_diff_chla - tot_chla_dynamics$se)
+
+# Filter out the control treatment for the plot
+tot_chla_dynamics_filtered <- tot_chla_dynamics %>% filter(Treatment == "CO/HW")
+
+# Plot the data with faceting and aligned y-axis
+chla_plot <- ggplot(tot_chla_dynamics_filtered, aes(x = Day, y = mean_diff_chla, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab("Chlorophyll-a \nDifference in µg/L") +
+  xlab("Day") +
+  viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  viridis::scale_fill_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  scale_x_continuous(limits = c(-5, 40)) +
+  theme(legend.position = "top") +
+  theme_bw() +
+  guides(fill = guide_legend(override.aes = list(size = 8), ncol = 6)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_cartesian(ylim = y_limits) +
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  theme(legend.position = "none")
+
+```
+
+Chlorophyll - a shows probably the most dramatic response. There is not much change happening until the third heatwave, which determines a drop in chlorphyll - a. This strong decline reflect the compositional change and especially the reduction in biomass. 
+
+```{r chlorophyll_plot, fig.cap='CHlorophyll-a dynamics over time. The red areas show the three heatwaves', fig.align="center", fig.height=6, fig.width=10}
+
+ chla_plot
+```
+
+
+```{r}
+
+model_chla <- lmer(chla_log ~ Treatment * Day + (1 | Cosm), data = chla)
+summary(model_chla)
+```
+Model diagnostics
+```{r check_chla_model, fig.cap= 'Checking assumption for chlorophyll - a model', fig.align="center", fig.height=12, fig.width=10}
+check_model(model_chla)
+```
+Not too bad, but homogeneity of variance a bit messy. Consider transformation.
+
+
+Post - hoc analysis. Let see when the HW treatment had a significant impact on phyto abundance
+```{r}
+# Specify the days you are interested in for post-hoc comparisons
+days_of_interest <- unique(chla$Day)  # You can also specify specific days manually, e.g., c(1, 5, 10, 15)
+
+# Perform post-hoc analysis with specified days
+emm_chla <- emmeans(model_chla, ~ Treatment | Day, at = list(Day = days_of_interest))
+post_hoc_results_chla <- pairs(emm_chla)
+# Convert post_hoc_results to a data frame
+post_hoc_df_chla <- as.data.frame(post_hoc_results_chla)
+
+# Order the results by the 'Day' column
+post_hoc_df_chla <- post_hoc_df_chla %>% arrange(Day)
+
+# Print the results using kable with limited number of decimals
+kable(post_hoc_df_chla %>% mutate_if(is.numeric, ~round(., 3)), format = "markdown")
+```
+As expected from the plot, the estimate increases with time, and there is a big jump from day 31 to 38, corresponding to the drop in chla.
+
+### Relative abundance 
+
+Let's have a look at how different taxonomic groups of phytoplankton change over time in terms of relative abundances. 
+```{r results='hide', echo = FALSE}
+# load group data
+groups <- read_excel("data/DataMesocosms2021.xlsx", 
+                     sheet = "Phytoplankton counting")
+
+groups <- groups[-c(1:5), c(2,4)]
+names(groups)
+groups <- groups %>% rename(group = "...2",
+                            species = "UNIT cell/mL")
+
+
+# Load the data
+bio <- read_excel("data/biomass_cosm.xlsx")
+
+# Reshape the data to long format
+bio_long <- bio %>%
+  pivot_longer(
+    cols = -c(Sample, Treatment, Day),
+    names_to = "species",
+    values_to = "biomass"
+  )
+
+# Merge with groups by species names
+merged_data <- bio_long %>%
+  left_join(groups, by = "species")
+
+# Calculate the total biomass by group for each sample/treatment/day
+group_bio <- merged_data %>%
+  group_by(Treatment, Day, group) %>%
+  summarise(total_biomass = sum(biomass, na.rm = TRUE), .groups = "drop")
+
+# Calculate relative abundance
+group_bio <- group_bio %>%
+  group_by( Treatment, Day) %>%
+  mutate(total = sum(total_biomass)) %>%
+  mutate(relative_bio = total_biomass / total * 100) %>%
+  ungroup() %>%
+  filter(Treatment != "E/C0")
+
+
+```
+
+The relative abundance of different groups changes largely over time, and may align with the drop in ecosystem functioning endpoints. 
+```{r relative_abundance_plot, fig.cap='Change in relative abundance of phytoplankton groups over time in the control and heatwave treatment', fig.align="center", fig.height=6, fig.width=10}
+library(RColorBrewer)
+# Create the bar plot using a ColorBrewer palette
+p <- ggplot(group_bio, aes(x = Treatment, y = relative_bio, fill = group)) +
+  geom_bar(stat = "identity", position = "stack") +
+  facet_wrap(~ Day) +
+  labs(x = "Treatment", y = "Relative Abundance (%)", title = "Relative Abundance by Treatment and Day") +
+  theme_minimal(base_size = 20, ncol = 5) +
+  theme(
+    panel.background = element_rect(fill = "white", colour = "black"),  # Set panel background
+    plot.title = element_text(hjust = 0.5, margin = margin(b = 20), size = 20, face = "bold"),  # Set plot title text size and make it bold
+    axis.text = element_text(size = 20),  # Set axis text size
+    axis.title = element_text(size = 20),  # Set axis title text size
+    plot.tag = element_text(size = 20)  # Set tag size
+  ) +
+  scale_fill_brewer(palette = "Set1")  # Apply a ColorBrewer palette
+
+# Display the plot
+print(p)
+```
+
+
+
+# Discussion 
+
+This is just a preliminary check to see if there is enough interesting material for a paper. 
+Statistics look ok.
+
+Additionally, it would perhaps be interesting to see if the slope of recovery after each individual HW changes, which could give us a numeric quantification of "how much" this critical slowing down is happening. 
+
+Considering the small amount of experimental units, I am not sure how big we can go with this. 
+Yet, there are at least two things to consider:
+- heatwave are still a very hot topic (see continous literature being publish on HW)
+- Community rescue, but particualrly critical slowing down are very fancy theory to test. Critical slowing down is closely related to the whole regime shift / critical transition theory, thus linking it up with the growing concer of heatwaves, and particulalry recurring heatwaves could put us in a nice position. 

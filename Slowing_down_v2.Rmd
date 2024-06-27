@@ -1,0 +1,669 @@
+---
+title: "Slowing down in recovery of phytoplankton community due to recurrent heatwaves"
+author: "Francesco Polazzo"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    code_folding: hide
+    keep_md: yes
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r include = FALSE, echo = FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      include = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      cache = FALSE)
+```
+
+```{r results='hide'}
+rm(list = ls())
+library(tidyverse)
+library(readxl)
+library(patchwork)
+library(vegan)
+library(emmeans)
+library(lme4)
+library(lmerTest)
+library(performance)
+library(knitr)
+library(kableExtra)
+library(officer)
+library(flextable)
+library(broom.mixed)
+library(lubridate)
+```
+
+# Introduction
+
+With this paper (?) we wanted to test two major ecological framework that are commonly applied to systems facing repeated perturbations: 
+
+- Critical slowing down (https://www.journals.uchicago.edu/doi/full/10.1086/516845) (https://www.nature.com/articles/nature10723)
+
+- Community rescue (https://www.nature.com/articles/s41559-020-1134-5)
+
+For this we used data coming from an outdoor pond mesocosm experiment (2021 Spain) where a semi-natural phytoplankton community was exposed to three subsequent heatwaves. Heatwaves are becoming more frequent and more intense, rising concerns about whether and how natural communities can face these perturbations and keep performing their functions. Critically, increasing research is suggesting that heatwaves can cause ecological systems to transition.
+
+This transitions, also called tipping points, represent particular points at which complex systems can shift abruptly from one state to another, and they are notoriously difficult to predict.
+Attention has thus turned to inferring process from pattern – identifying phenomenological signals in measurable aspect of a biological system that indicates shifts in the under-lying processes that may alter the structure and function of the system. A key development in the search for such pattern-based indicators is early warning signals (EWSs) derived from dynamic systems theory (all Scheffer's papers)
+
+Theory proposes that early warning signals may be based on the phenomenon that recovery rates from perturbations should tend to zero when approaching a tipping point. However, evidence that this happens in living systems is scarce (at best).
+
+
+
+Community rescue occurs when ecological or evolutionary processes restore positive growth in a highly stressful environment that was lethal to the community in its ancestral form, thus averting biomass collapse in a deteriorating environment. Very few empirical examples exist about community rescue, yet it is though to be one key mechanism that increases stress resistance in communities and contribute maintaining aggregate community properties such as biomass under stressful conditions.
+
+Here we test whether a semi-natural phytoplankton community undergoing repeated heatwave perturbation shows signs of critical slowing down or community rescue. 
+
+# Material and methods
+
+I just want to mention that I am using only data up to day 38 because I want the same amount of time after each heatwave to compare the recovery after heatwaves. So no longer recovery is assessed and all data points after are likely not going to be used.
+
+# Results
+## Water temperature time series
+```{r temperature_plot, fig.cap='Water temperature dynamics over time.', fig.align="center", fig.height=6, fig.width=10}
+
+Ambient<- read_excel("data/Ambient_HoboLogger1.xlsx")
+
+HW<- read_excel("data/Heatwave_HoboLogger3.xlsx")
+
+# Convert datetime columns to POSIXct if they are not already
+Ambient$`Date Time, GMT +0200` <- ymd_hms(Ambient$`Date Time, GMT +0200`)
+HW$`Date Time` <- ymd_hms(HW$`Date Time`)
+
+# Add a treatment column to each dataset
+Ambient <- Ambient %>%
+  rename(DateTime = `Date Time, GMT +0200`, Temp = `Temp, °C`, Intensity = `Intensity,  lux`) %>%
+  mutate(Treatment = "Ambient")
+
+HW <- HW %>%
+  rename(DateTime = `Date Time`, Temp = `Temp, °C`, Intensity = `Intensity,  lux`) %>%
+  mutate(Treatment = "HW")
+
+# Combine the datasets
+combined_data <- bind_rows(Ambient, HW)
+
+
+## Plot only data relevant for the experiment
+filtered_combined_data <- combined_data %>%
+  filter(DateTime <= as.POSIXct("2021-06-15 23:59:59"))
+
+
+# Plot temperature over time
+temperature_plot <- ggplot(filtered_combined_data, aes(x = DateTime, y = Temp, color = Treatment)) +
+  geom_line(size = 1) +
+  labs(title = "",
+       x = "Date",
+       y = "Temperature (°C)",
+       color = "Treatment") +
+  theme_bw(base_size = 20) +
+  theme(
+    panel.grid.major = element_line(color = "gray", linetype = "dashed"),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 24, face = "bold"),
+    axis.title.x = element_text(size = 22, face = "bold"),
+    axis.title.y = element_text(size = 22, face = "bold"),
+    axis.text = element_text(size = 20),
+    legend.position = "top",
+    legend.title = element_text(size = 20, face = "bold"),
+    legend.text = element_text(size = 18)
+  ) +
+  scale_color_viridis_d(option = "C", end = 0.8)  # Using viridis color palette
+
+# Print the plot
+print(temperature_plot)
+
+```
+The water temperature manipulation using the TENTACLE machinery [https://www.sciencedirect.com/science/article/pii/S2468067222000529] worked quite well. 
+
+## Ecosystem functioning endpoints
+
+### Dissolved oxygen 
+
+```{r results='hide', echo = FALSE}
+
+# Function to calculate standard error
+se <- function(x) sqrt(var(x, na.rm = TRUE) / length(na.omit(x)))
+
+
+ox <- read.csv("data/oxygen.csv")
+
+
+# Calculate mean abundance and standard error for Control
+control_mean <- ox %>% filter(Treatment == "Control") %>%
+  group_by(Day) %>%
+  summarize(control_mean_ox = mean(ox, na.rm = TRUE))
+
+# Calculate differences from Control for each treatment
+tot.ox_diff <- ox %>%
+  left_join(control_mean, by = "Day") %>%
+  mutate(diff_ox = ox - control_mean_ox)
+
+# Summarize the data for plotting
+tot_ox_dynamics <- tot.ox_diff %>%
+  group_by(Treatment, Day) %>%
+  summarize(mean_diff_ox = mean(diff_ox, na.rm = TRUE), se = se(diff_ox)) %>%
+  mutate(lower_y = mean_diff_ox - se, upper_y = mean_diff_ox + se)
+
+# Determine the y-axis limits to ensure alignment of zero line
+y_limits <- range(tot_ox_dynamics$mean_diff_ox + tot_ox_dynamics$se, 
+                  tot_ox_dynamics$mean_diff_ox - tot_ox_dynamics$se)
+
+# Filter out the control treatment for the plot
+tot_ox_dynamics_filtered <- tot_ox_dynamics %>% filter(Treatment == "HW")
+
+
+ox_plot <- ggplot(tot_ox_dynamics_filtered, aes(x = Day, y = mean_diff_ox, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab("Dissolved oxygen \nDifference in mg/L") +
+  xlab("Day") +
+  viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  viridis::scale_fill_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  scale_x_continuous(limits = c(-5, 40)) +
+  theme_bw() +
+  theme(legend.position = "none",                   # Remove legend
+        text = element_text(size = 14),             # Increase text size for all text elements
+        axis.title = element_text(size = 16),       # Increase axis title size
+        plot.title = element_text(size = 18),       # Increase plot title size
+        axis.text = element_text(size = 12),        # Increase axis text size
+        axis.line = element_line(size = 0.5),       # Adjust axis line thickness
+        panel.grid.major = element_blank(),         # Remove major gridlines
+        panel.grid.minor = element_blank(),         # Remove minor gridlines
+        panel.border = element_blank(),            # Remove panel borders
+        panel.background = element_blank()) +      # Remove panel background
+
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_cartesian(ylim = y_limits) + 
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red")
+
+```
+Oxygen, again, shows an impaired recovery after the third heatwave. The contrast with the first two heatwave is striking. Indeed, the first two heatwaves determined a decline in DO only while happening, with DO quickly returning to levels higher than the control. The third heatwave strongly decreased DO during its course, and slowed down its recovery in the post HW phase so that it never got back to control levels.
+```{r oxygen_plot, fig.cap='Dissolved oxygen dynamics over time. The red areas show the three heatwaves', fig.align="center", fig.height=6, fig.width=10}
+
+ ox_plot
+```
+
+Creating model for oxygen
+```{r}
+
+model_ox <- lmer(log(ox) ~ Treatment * Day + (1 | Cosm), data = ox)
+```
+
+Model diagnostics
+```{r check_ox_model, fig.cap= 'Checking assumption for oxygen model', fig.align="center", fig.height=12, fig.width=10}
+
+check_model(model_ox)
+```
+Not bad.
+
+
+```{r}
+# Create a tidy summary
+tidy_summary <- tidy(model_ox)
+# Print the summary in RMarkdown with kableExtra for formatting
+tidy_summary %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  kable(format = "html", escape = FALSE) %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r}
+# Save the tidy summary to a Word document
+tidy_summary <- tidy(model_ox) %>%
+  mutate(across(where(is.numeric), ~ round(., 3)))
+
+# Create a flextable object
+ft <- flextable(tidy_summary)
+
+# Set properties for the flextable (optional)
+ft <- ft %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  align(align = "center", part = "all") %>%
+  bold(part = "header") %>%
+  autofit()
+
+# Save the flextable as a Word document
+doc <- read_docx()
+doc <- body_add_flextable(doc, value = ft)
+print(doc, target = "ox_model_summary.docx")
+```
+
+
+
+
+Post - hoc analysis. Let see when the HW treatment had a significant impact on phyto abundance
+```{r}
+
+# Specify the days you are interested in for post-hoc comparisons
+days_of_interest <- unique(ox$Day)  # You can also specify specific days manually, e.g., c(1, 5, 10, 15)
+
+# Perform post-hoc analysis with specified days
+emm_ox <- emmeans(model_ox, ~ Treatment | Day, at = list(Day = days_of_interest))
+post_hoc_results_ox <- pairs(emm_ox)
+# Convert post_hoc_results to a data frame
+post_hoc_df_ox <- as.data.frame(post_hoc_results_ox)
+
+# Order the results by the 'Day' column
+post_hoc_df_ox <- post_hoc_df_ox %>% arrange(Day)
+
+# Print the results using kable with limited number of decimals
+kable(post_hoc_df_ox  %>% mutate_if(is.numeric, ~round(., 3)), format = "html") %>%
+  kable_styling(full_width = FALSE) %>%
+  column_spec(1, bold = TRUE)   %>% 
+  column_spec(7, bold = ifelse(post_hoc_df_ox$p.value < 0.05, TRUE, FALSE))
+```
+
+
+```{r results='hide', echo=FALSE}
+# Save table for word document
+post_hoc_df_ox <- post_hoc_df_ox %>%
+  mutate(across(where(is.numeric), ~ round(., 3)))
+# Apply formatting to p-value column
+post_hoc_df_ox <- post_hoc_df_ox %>%
+  mutate(p_value = ifelse(p.value < 0.05, paste0("<b>", round(p.value, 3), "</b>"), round(p.value, 3)))
+
+# Create a flextable object from the data frame
+ft <- flextable(post_hoc_df_ox) 
+
+# Set properties for the flextable (optional)
+ft <- flextable(post_hoc_df_ox) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  align(align = "center", part = "all") %>%
+  bold(part = "header") %>%
+  autofit()
+
+# Save the flextable as a Word document
+doc <- read_docx()
+doc <- body_add_flextable(doc, value = ft)
+print(doc, target = "Ox_table_output.docx")
+
+```
+
+Visualization of model prediction (linear trend)
+```{r}
+
+# Visualization 
+emmip(model_ox, Treatment ~ Day, at = list(Day = days_of_interest), CIs = TRUE)
+
+```
+
+### Chlorophyll - a
+```{r results='hide', echo = FALSE}
+
+
+chla <- read.csv("data/chla.csv")
+
+
+
+
+# Calculate mean abundance and standard error for Control
+control_mean <- chla %>% filter(Treatment == "Control") %>%
+  group_by(Day) %>%
+  summarize(control_mean_chla = mean(chla, na.rm = TRUE))
+
+# Calculate differences from Control for each treatment
+tot.chla_diff <- chla %>%
+  left_join(control_mean, by = "Day") %>%
+  mutate(diff_chla = chla - control_mean_chla)
+
+# Summarize the data for plotting
+tot_chla_dynamics <- tot.chla_diff %>%
+  group_by(Treatment, Day) %>%
+  summarize(mean_diff_chla = mean(diff_chla, na.rm = TRUE), se = se(diff_chla)) %>%
+  mutate(lower_y = mean_diff_chla - se, upper_y = mean_diff_chla + se)
+
+# Determine the y-axis limits to ensure alignment of zero line
+y_limits <- range(tot_chla_dynamics$mean_diff_chla + tot_chla_dynamics$se, 
+                  tot_chla_dynamics$mean_diff_chla - tot_chla_dynamics$se)
+
+# Filter out the control treatment for the plot
+tot_chla_dynamics_filtered <- tot_chla_dynamics %>% filter(Treatment == "HW")
+
+# Plot the data with faceting and aligned y-axis
+
+chla_plot <- ggplot(tot_chla_dynamics_filtered, aes(x = Day, y = mean_diff_chla, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab("Chlorophyll - a \nDifference in µg/L") +
+  xlab("Day") +
+  viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  viridis::scale_fill_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  scale_x_continuous(limits = c(-5, 40)) +
+  theme_bw() +
+  theme(legend.position = "none",                   # Remove legend
+        text = element_text(size = 14),             # Increase text size for all text elements
+        axis.title = element_text(size = 16),       # Increase axis title size
+        plot.title = element_text(size = 18),       # Increase plot title size
+        axis.text = element_text(size = 12),        # Increase axis text size
+        axis.line = element_line(size = 0.5),       # Adjust axis line thickness
+        panel.grid.major = element_blank(),         # Remove major gridlines
+        panel.grid.minor = element_blank(),         # Remove minor gridlines
+        panel.border = element_blank(),            # Remove panel borders
+        panel.background = element_blank()) +      # Remove panel background
+
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_cartesian(ylim = y_limits) + 
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red")
+
+
+```
+
+Chlorophyll - a shows probably the most dramatic response. There is not much change happening until the third heatwave, which determines a drop in chlorphyll - a. This strong decline reflect the compositional change and especially the reduction in biomass. 
+
+```{r chlorophyll_plot, fig.cap='CHlorophyll-a dynamics over time. The red areas show the three heatwaves', fig.align="center", fig.height=6, fig.width=10}
+
+
+ chla_plot
+```
+
+
+```{r}
+
+model_chla <- lmer(log(chla) ~ Treatment * Day + (1 | Cosm), data = chla)
+
+# Create a tidy summary
+tidy_summary <- tidy(model_chla)
+# Print the summary in RMarkdown with kableExtra for formatting
+tidy_summary %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  kable(format = "html", escape = FALSE) %>%
+  kable_styling(full_width = FALSE)
+```
+
+
+```{r}
+# Save the tidy summary to a Word document
+tidy_summary <- tidy(model_chla) %>%
+  mutate(across(where(is.numeric), ~ round(., 3)))
+
+# Create a flextable object
+ft <- flextable(tidy_summary)
+
+# Set properties for the flextable (optional)
+ft <- ft %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  align(align = "center", part = "all") %>%
+  bold(part = "header") %>%
+  autofit()
+
+# Save the flextable as a Word document
+doc <- read_docx()
+doc <- body_add_flextable(doc, value = ft)
+print(doc, target = "chla_model_summary.docx")
+```
+
+
+Model diagnostics
+```{r check_chla_model, fig.cap= 'Checking assumption for chlorophyll - a model', fig.align="center", fig.height=12, fig.width=10}
+
+check_model(model_chla)
+```
+Not too bad, but homogeneity of variance a bit messy. Consider transformation.
+
+
+Post - hoc analysis. Let see when the HW treatment had a significant impact on phyto abundance
+```{r}
+# Specify the days you are interested in for post-hoc comparisons
+days_of_interest <- unique(chla$Day)  # You can also specify specific days manually, e.g., c(1, 5, 10, 15)
+
+# Perform post-hoc analysis with specified days
+emm_chla <- emmeans(model_chla, ~ Treatment | Day, at = list(Day = days_of_interest))
+post_hoc_results_chla <- pairs(emm_chla)
+# Convert post_hoc_results to a data frame
+post_hoc_df_chla <- as.data.frame(post_hoc_results_chla)
+
+# Order the results by the 'Day' column
+post_hoc_df_chla <- post_hoc_df_chla %>% arrange(Day)
+
+# Print the results using kable with limited number of decimals and additional formatting
+kable(post_hoc_df_chla %>% mutate_if(is.numeric, ~round(., 3)), format = "html") %>%
+  kable_styling(full_width = FALSE) %>%
+  column_spec(1, bold = TRUE)  %>% 
+  column_spec(7, bold = ifelse(post_hoc_df_chla$p.value < 0.05, TRUE, FALSE))
+```
+As expected from the plot, the estimate increases with time, and there is a big jump from day 31 to 38, corresponding to the drop in chla.
+
+```{r results='hide', echo=FALSE}
+# Save table for word document
+
+post_hoc_df_chla <- post_hoc_df_chla %>%
+  mutate(across(where(is.numeric), ~ round(., 3)))
+# Apply formatting to p-value column
+post_hoc_df_chla <- post_hoc_df_chla %>%
+  mutate(p_value = ifelse(p.value < 0.05, paste0("<b>", round(p.value, 3), "</b>"), round(p.value, 3)))
+
+# Create a flextable object from the data frame
+ft <- flextable(post_hoc_df_chla)
+
+# Set properties for the flextable (optional)
+ft <- flextable(post_hoc_df_chla) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  align(align = "center", part = "all") %>%
+  bold(part = "header") %>%
+  autofit()
+
+# Save the flextable as a Word document
+doc <- read_docx()
+doc <- body_add_flextable(doc, value = ft)
+print(doc, target = "Chla_table_output.docx")
+
+```
+
+
+
+### Relative biomass 
+Now we want to see if this gradual decline in oxygen and chla is related to taxonomic differences. 
+We start looking at the relative biomass of different phytoplankton group over time
+
+
+Let's have a look at how different taxonomic groups of phytoplankton change over time in terms of relative biomass 
+```{r results='hide', echo = FALSE, warning=FALSE}
+# load group data
+
+ group_bio <- read.csv("data/group_bio.csv")
+
+
+# Calculate relative abundance
+group_bio2 <- group_bio %>%
+  group_by( Treatment, Day) %>%
+  mutate(total = sum(total_biomass)) %>%
+  mutate(relative_bio = total_biomass / total * 100) %>%
+  ungroup() 
+
+
+
+```
+
+The relative abundance of different groups changes largely over time, and may align with the drop in ecosystem functioning endpoints. 
+```{r relative_abundance_plot, fig.cap='Change in relative abundance of phytoplankton groups over time in the control and heatwave treatment', fig.align="center", fig.height=12, fig.width=25}
+library(RColorBrewer)
+
+# Create the bar plot using a ColorBrewer palette
+p <- ggplot(group_bio2, aes(x = Treatment, y = relative_bio, fill = group)) +
+  geom_bar(stat = "identity", position = "stack") +
+  facet_wrap(~ Day) +
+  labs(x = "Treatment", y = "Relative Biomass (%)") +
+  theme_minimal(base_size = 20) +
+  theme(
+    panel.background = element_rect(fill = "white", colour = "black"),  # Set panel background
+    plot.title = element_text(hjust = 0.5, margin = margin(b = 20), size = 20, face = "bold"),  # Set plot title text size and make it bold
+    axis.text = element_text(size = 30),  # Set axis text size
+    axis.title = element_text(size = 30),  # Set axis title text size
+    strip.text = element_text(size = 30),  # Set facet strip text size
+    legend.text = element_text(size = 30),  # Set legend text size
+    legend.title = element_text(size = 30)  # Set legend title text size
+  ) +
+  scale_fill_brewer(palette = "Set1")  # Apply a ColorBrewer palette
+# Display the plot
+print(p)
+```
+
+
+
+## Compositional dynamics
+
+we now look if this visual turnover in relative groups biomass is statistically significant
+
+### PERMANOVA
+
+```{r results='hide', echo=FALSE}
+
+
+wide_data <- group_bio %>%
+  pivot_wider(
+    names_from = group,
+    values_from = total_biomass)  # Fill missing values with 0
+  
+
+
+group_bio_wide <- as.data.frame(wide_data)
+
+
+set.seed(258)
+# PERMANOVA per day
+day_results <- lapply(unique(group_bio_wide$Day), function(day) {
+  subset_data <- group_bio_wide %>% filter(Day == day)
+  species_data <- subset_data[, 4:ncol(subset_data)]  # Extract species abundance columns
+  bray_curtis_dist <- vegdist(species_data, method = "bray", binary = FALSE, na.rm = TRUE)  # Calculate Bray-Curtis dissimilarity
+  adonis_result <- adonis(bray_curtis_dist ~ Treatment, data = subset_data, permutations = 999)
+  result <- list(Day = day, PERMANOVA_result = adonis_result)
+  print(result)
+  return(result)
+})
+
+```
+
+```{r echo=FALSE}
+
+# Prepare data for nice printing
+day_results_df <- lapply(day_results, function(res) {
+  if (!is.null(res$PERMANOVA_result$aov.tab)) {
+    data.frame(
+      Day = res$Day,
+      F = res$PERMANOVA_result$aov.tab$F.Model[1],
+      R2 = res$PERMANOVA_result$aov.tab$R2[1],
+      p_value = res$PERMANOVA_result$aov.tab$`Pr(>F)`[1]
+    )
+  } else {
+    data.frame(
+      Day = res$Day,
+      F = NA,
+      R2 = NA,
+      p_value = NA
+    )
+  }
+}) %>%
+  bind_rows() %>%
+  arrange(Day)
+
+
+# Print the results using kable with limited number of decimals and additional formatting
+kable(day_results_df, format = "html") %>%
+  kable_styling(full_width = FALSE) %>%
+  column_spec(4, bold = ifelse(day_results_df$p_value < 0.05, TRUE, FALSE))  # Make p-value column bold if significant
+
+```
+
+Significant differences on day 2, 10, 30, and 38
+
+```{r results='hide', echo=FALSE}
+# Save table for word document
+
+day_results_df <- day_results_df %>%
+  mutate(across(where(is.numeric), ~ round(., 3)))
+# Apply formatting to p-value column
+day_results_df <- day_results_df %>%
+  mutate(p_value = ifelse(p_value < 0.05, paste0("<b>", round(p_value, 3), "</b>"), round(p_value, 3)))
+
+# Create a flextable object from the data frame
+ft <- flextable(day_results_df)
+
+# Set properties for the flextable (optional)
+ft <- flextable(day_results_df) %>%
+  set_table_properties(width = 1, layout = "autofit") %>%
+  align(align = "center", part = "all") %>%
+  bold(part = "header") %>%
+  autofit()
+
+# Save the flextable as a Word document
+doc <- read_docx()
+doc <- body_add_flextable(doc, value = ft)
+print(doc, target = "PEROMANOVA_table_output.docx")
+
+```
+
+
+```{r results='hide', echo=FALSE}
+
+
+group_bio_wide <- group_bio_wide[,-c(1)]
+
+species_data <- group_bio_wide[, -(1:2)]  # Assuming the first two columns are Day and Treatment
+bray_curtis_dist <- vegdist(species_data, method = "bray")
+
+# Function to calculate NMDS and prepare data for plotting
+prepare_nmds_data <- function(day_data) {
+  species_data <- day_data[, -(1:2)]  # Assuming the first two columns are Day and Treatment
+  bray_curtis_dist <- vegdist(species_data, method = "bray")
+  nmds_result <- metaMDS(bray_curtis_dist, k = 2, trymax = 100)
+  ordination_df <- as.data.frame(nmds_result$points)
+  ordination_df$Treatment <- day_data$Treatment
+  return(ordination_df)
+}
+
+# List to store ordination data frames for each day
+ordination_list <- lapply(unique(group_bio_wide$Day), function(day) {
+  day_data <- group_bio_wide %>% filter(Day == day)
+  ordination_df <- prepare_nmds_data(day_data)
+  ordination_df$Day <- day
+  return(ordination_df)
+})
+
+# Combine all ordination data frames into one
+combined_ordination_df <- do.call(rbind, ordination_list)
+
+
+```
+
+NMDS plot
+Not sure if this makes sense, as the change in relative biomass plot looks much nicer
+```{r echo = FALSE, composition_plot_NMDS, fig.cap='Non-Metric Multidimensional Scaling plot of compositional dynamics over time.', fig.align="center", fig.height=12, fig.width=25}
+
+# Define the layout for 3 rows and 5 columns
+num_rows <- 3
+num_cols <- 5
+
+# Plot with polygons for each treatment
+ggplot(combined_ordination_df, aes(x = MDS1, y = MDS2, fill = Treatment, group = interaction(Treatment, Day))) +
+  geom_polygon(alpha = 0.5, color = "black") +
+  geom_point(size = 3, aes(color = Treatment)) +
+  labs(x = "NMDS Axis 1", y = "NMDS Axis 2", color = "Treatment", fill = "Treatment") +
+  theme_bw(base_size = 25) +
+  ggtitle("Compositional Change of Phytoplankton Community Over Time") +
+  facet_wrap(~ Day, nrow = num_rows, ncol = num_cols, scales = "free")
+```
+
+
+
+# Discussion 
+
+This is just a preliminary check to see if there is enough interesting material for a paper. 
+Statistics look ok.
+
+
+Considering the small amount of experimental units, I am not sure how big we can go with this. 
+Yet, there are at least two things to consider:
+- heatwave are still a very hot topic (see continous literature being publish on HW)
+- Community rescue, but particualrly critical slowing down are very fancy theory to test. Critical slowing down is closely related to the whole regime shift / critical transition theory, thus linking it up with the growing concer of heatwaves, and particulalry recurring heatwaves could put us in a nice position. 

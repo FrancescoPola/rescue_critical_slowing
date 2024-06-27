@@ -1,0 +1,32 @@
+"0","ox_plot <- ggplot(tot_ox_dynamics_filtered, aes(x = Day, y = mean_diff_ox, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab(""Dissolved oxygen \nDifference in mg/L"") +
+  xlab(""Day"") +
+  viridis::scale_colour_viridis(name = ""Treatment"", discrete = TRUE, end = 0.8, begin = 0.1, option = ""inferno"") +
+  viridis::scale_fill_viridis(name = ""Treatment"", discrete = TRUE, end = 0.8, begin = 0.1, option = ""inferno"") +
+  scale_x_continuous(limits = c(-5, 40)) +
+  theme_bw() +
+  theme(legend.position = ""none"",                   # Remove legend
+        text = element_text(size = 14),             # Increase text size for all text elements
+        axis.title = element_text(size = 16),       # Increase axis title size
+        plot.title = element_text(size = 18),       # Increase plot title size
+        axis.text = element_text(size = 12),        # Increase axis text size
+        axis.line = element_line(size = 0.5),       # Adjust axis line thickness
+        panel.grid.major = element_blank(),         # Remove major gridlines
+        panel.grid.minor = element_blank(),         # Remove minor gridlines
+        panel.border = element_blank(),            # Remove panel borders
+        panel.background = element_blank()) +      # Remove panel background
+
+  geom_hline(yintercept = 0, linetype = ""dashed"") +
+  coord_cartesian(ylim = y_limits) + 
+  annotate(""rect"", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = ""red"") +
+  annotate(""rect"", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = ""red"") +
+  annotate(""rect"", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = ""red"")
+"
+"2","Warning:"
+"2"," [38;5;250mThe `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+[36mℹ[38;5;250m Please use the `linewidth` argument instead.
+[90mThis warning is displayed once every 8 hours.[38;5;250m
+[90mCall `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.[38;5;250m[39m
+"
