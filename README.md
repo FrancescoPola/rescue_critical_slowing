@@ -9,4 +9,5 @@ Slowing_down_v2_files: contains figures produced during the analysis as well as 
 
 Tables: contains the result table produced in the analysis through the "Slowing_down_v2.Rmd" file. 
 
+The "Slowing_down_v2.html" file shows all the reuslts and figures. 
 
