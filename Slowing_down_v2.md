@@ -46,6 +46,21 @@ I just want to mention that I am using only data up to day 38 because I want the
 
 # Results
 ## Water temperature time series
+
+```
+## # A tibble: 1 × 1
+##   `min(Temp)`
+##         <dbl>
+## 1        13.1
+```
+
+```
+## # A tibble: 1 × 1
+##   `max(Temp)`
+##         <dbl>
+## 1        35.7
+```
+
 <div class="figure" style="text-align: center">
 <img src="Slowing_down_v2_files/figure-html/temperature_plot-1.png" alt="Water temperature dynamics over time."  />
 <p class="caption">(\#fig:temperature_plot)Water temperature dynamics over time.</p>
@@ -424,6 +439,10 @@ Post - hoc analysis. Let see when the HW treatment had a significant impact on p
 As expected from the plot, the estimate increases with time, and there is a big jump from day 31 to 38, corresponding to the drop in chla.
 
 
+
+
+Visualization of model prediction (linear trend)
+![](Slowing_down_v2_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 
 

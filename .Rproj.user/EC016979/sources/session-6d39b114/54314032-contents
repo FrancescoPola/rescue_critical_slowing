@@ -237,7 +237,7 @@ ft <- ft %>%
 # Save the flextable as a Word document
 doc <- read_docx()
 doc <- body_add_flextable(doc, value = ft)
-print(doc, target = "ox_model_summary.docx")
+print(doc, target = "Tables/ox_model_summary.docx")
 ```
 
 
@@ -287,7 +287,7 @@ ft <- flextable(post_hoc_df_ox) %>%
 # Save the flextable as a Word document
 doc <- read_docx()
 doc <- body_add_flextable(doc, value = ft)
-print(doc, target = "Ox_table_output.docx")
+print(doc, target = "Tables/Ox_table_output.docx")
 
 ```
 
@@ -403,7 +403,7 @@ ft <- ft %>%
 # Save the flextable as a Word document
 doc <- read_docx()
 doc <- body_add_flextable(doc, value = ft)
-print(doc, target = "chla_model_summary.docx")
+print(doc, target = "Tables/chla_model_summary.docx")
 ```
 
 
@@ -459,7 +459,16 @@ ft <- flextable(post_hoc_df_chla) %>%
 # Save the flextable as a Word document
 doc <- read_docx()
 doc <- body_add_flextable(doc, value = ft)
-print(doc, target = "Chla_table_output.docx")
+print(doc, target = "Tables/Chla_table_output.docx")
+
+```
+
+
+Visualization of model prediction (linear trend)
+```{r}
+
+# Visualization 
+emmip(model_chla, Treatment ~ Day, at = list(Day = days_of_interest), CIs = TRUE)
 
 ```
 
@@ -602,7 +611,7 @@ ft <- flextable(day_results_df) %>%
 # Save the flextable as a Word document
 doc <- read_docx()
 doc <- body_add_flextable(doc, value = ft)
-print(doc, target = "PEROMANOVA_table_output.docx")
+print(doc, target = "Tables/PEROMANOVA_table_output.docx")
 
 ```
 
