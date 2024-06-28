@@ -190,9 +190,94 @@ ox_plot <- ggplot(tot_ox_dynamics_filtered, aes(x = Day, y = mean_diff_ox, color
 
 ```
 Oxygen, again, shows an impaired recovery after the third heatwave. The contrast with the first two heatwave is striking. Indeed, the first two heatwaves determined a decline in DO only while happening, with DO quickly returning to levels higher than the control. The third heatwave strongly decreased DO during its course, and slowed down its recovery in the post HW phase so that it never got back to control levels.
-```{r oxygen_plot, fig.cap='Dissolved oxygen dynamics over time. The red areas show the three heatwaves', fig.align="center", fig.height=6, fig.width=10}
+```{r oxygen_plot, fig.cap='Dissolved oxygen dynamics over time. The red areas show the three heatwaves. The figure shows the difference in DO between mesocosm undergoing the HWs treatment and the control (dashed line at zero).', fig.align="center", fig.height=6, fig.width=10}
 
  ox_plot
+```
+
+We now look specifically at how the slope of recovery changes after each HW. To do that we look at the slope of the linear regression between two subsequent time points (during and after a HW) of the difference between DO in control and HW mesocosms.
+```{r oxygen_slopes, fig.cap='Change in the slope of the linear regression connecting two subsequent time point ((during and after a HW) of the difference between DO in control and HW mesocosms.', fig.align="center", fig.height=6, fig.width=10}
+# Calculate mean ox for Control by day
+control_bm <- ox %>% 
+  filter(Treatment == "Control") %>%
+  group_by(Day) %>% 
+  dplyr::summarize(mean_ox_control = mean(ox, na.rm = TRUE))
+
+# Calculate mean ox for all treatments by day and cosm
+ox_all_treat <- ox %>% 
+  group_by(Day, Cosm, Treatment) %>% 
+  dplyr::summarize(mean_ox = mean(ox, na.rm = TRUE))
+
+# Merge the control and treatment data
+ox_merged <- merge(ox_all_treat, control_bm, by = "Day")
+
+# Remove Day -4
+ox_merged <- ox_merged %>% 
+  filter(Day != -4)
+
+# Calculate the difference between HW and control
+ox_merged <- ox_merged %>% 
+  mutate(diff = mean_ox - mean_ox_control)
+
+# Filter HW data
+hw_data <- ox_merged %>% filter(Treatment == "HW")
+
+# Define day ranges
+day_ranges <- list(c(3, 10), c(15, 24), c(30, 38))
+
+# Add a range column to hw_data with the correct order
+hw_data <- hw_data %>% 
+  mutate(range = case_when(
+    Day >= 3 & Day <= 10 ~ "3-10",
+    Day >= 15 & Day <= 24 ~ "15-24",
+    Day >= 30 & Day <= 38 ~ "30-38",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(range))
+
+# Set the order of the range levels
+hw_data$range <- factor(hw_data$range, levels = c("3-10", "15-24", "30-38"))
+
+# Function to fit linear model
+fit_lm <- function(data) {
+  lm_model <- lm(diff ~ Day, data = data)
+  return(lm_model)
+}
+
+# Apply function to each day range and store models
+lm_models <- hw_data %>%
+  group_by(range) %>%
+  do(model = fit_lm(.))
+
+# Extract slopes
+slopes <- lm_models %>%
+  rowwise() %>%
+  mutate(slope = coef(model)["Day"]) %>%
+  select(range, slope) %>%
+  ungroup()
+
+# Create a combined plot
+combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
+  geom_point(aes(color = as.factor(Cosm)), size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Day", y = "Difference (HW - Control)") +
+  theme_bw(base_size = 15) +
+  theme(legend.position = "none") +
+  facet_wrap(~ range, scales = "free", ncol = 3)
+
+# Add slope annotations
+combined_plot <- combined_plot +
+  geom_text(data = slopes, aes(x = Inf, y = Inf, label = paste0("Slope: ", round(slope, 3))), 
+            hjust = 1.5, vjust = 1.2, size = 5)
+
+print(combined_plot)
+```
+
+
+```{r oxy_combined, fig.cap='combined plot for manuscript', fig.align="center", fig.height=10, fig.width=12}
+
+oxy_combined <- ox_plot / combined_plot
+oxy_combined
 ```
 
 Creating model for oxygen
@@ -370,6 +455,89 @@ Chlorophyll - a shows probably the most dramatic response. There is not much cha
  chla_plot
 ```
 
+
+We now look specifically at how the slope of recovery changes after each HW. To do that we look at the slope of the linear regression between two subsequent time points (during and after a HW) of the difference between chlorophyll - a concentration in control and HW mesocosms.
+```{r chla_slopes, fig.cap='Change in the slope of the linear regression connecting two subsequent time point (during and after a HW) of the difference between chlorophyll - a concentration in control and HW mesocosms.', fig.align="center", fig.height=6, fig.width=10}
+# Calculate mean chla for Control by day
+control_bm <- chla %>% 
+  filter(Treatment == "Control") %>%
+  group_by(Day) %>% 
+  dplyr::summarize(mean_chla_control = mean(chla, na.rm = TRUE))
+
+# Calculate mean chla for all treatments by day and cosm
+chla_all_treat <- chla %>% 
+  group_by(Day, Cosm, Treatment) %>% 
+  dplyr::summarize(mean_chla = mean(chla, na.rm = TRUE))
+
+# Merge the control and treatment data
+chla_merged <- merge(chla_all_treat, control_bm, by = "Day")
+
+# Remove Day -4
+chla_merged <- chla_merged %>% 
+  filter(Day != -4)
+
+# Calculate the difference between HW and control
+chla_merged <- chla_merged %>% 
+  mutate(diff = mean_chla - mean_chla_control)
+
+# Filter HW data
+hw_data <- chla_merged %>% filter(Treatment == "HW")
+
+# Define day ranges
+day_ranges <- list(c(3, 10), c(15, 24), c(30, 38))
+
+# Add a range column to hw_data with the correct order
+hw_data <- hw_data %>% 
+  mutate(range = case_when(
+    Day >= 3 & Day <= 10 ~ "3-10",
+    Day >= 15 & Day <= 24 ~ "15-24",
+    Day >= 30 & Day <= 38 ~ "30-38",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(range))
+
+# Set the order of the range levels
+hw_data$range <- factor(hw_data$range, levels = c("3-10", "15-24", "30-38"))
+
+# Function to fit linear model
+fit_lm <- function(data) {
+  lm_model <- lm(diff ~ Day, data = data)
+  return(lm_model)
+}
+
+# Apply function to each day range and store models
+lm_models <- hw_data %>%
+  group_by(range) %>%
+  do(model = fit_lm(.))
+
+# Extract slopes
+slopes <- lm_models %>%
+  rowwise() %>%
+  mutate(slope = coef(model)["Day"]) %>%
+  select(range, slope) %>%
+  ungroup()
+
+# Create a combined plot
+combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
+  geom_point(aes(color = as.factor(Cosm)), size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Day", y = "Difference (HW - Control)") +
+  theme_bw(base_size = 15) +
+  theme(legend.position = "none") +
+  facet_wrap(~ range, scales = "free", ncol = 3)
+
+# Add slope annotations
+combined_plot <- combined_plot +
+  geom_text(data = slopes, aes(x = Inf, y = Inf, label = paste0("Slope: ", round(slope, 3))), 
+            hjust = 1.5, vjust = 1.2, size = 5)
+
+print(combined_plot)
+```
+
+```{r chla_combined, fig.cap='combined plot for manuscript', fig.align="center", fig.height=10, fig.width=12}
+chla_combined <- chla_plot / combined_plot
+chla_combined
+```
 
 ```{r}
 

@@ -314,3 +314,251 @@ print(combined_plot)
 
 ggsave("phyto_zoo_dynamics.png", combined_plot, width = 12, height = 8)
 ggsave("phyto_zoo_dynamics.pdf", combined_plot, width = 12, height = 8)
+
+
+
+
+
+
+
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Sample data (for demonstration purposes)
+chla <- data.frame(
+  Day = c(-4, -4, -4, -4, -4, -4, -4, -4, 3, 3, 3, 3, 3, 3, 3, 3, 10, 10, 10, 10, 10, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15, 15, 24, 24, 24, 24, 24, 24, 24, 24, 30, 30, 30, 30, 30, 30, 30, 30, 38, 38, 38, 38, 38, 38, 38, 38),
+  Date = as.character(c(44307, 44307, 44307, 44307, 44307, 44307, 44307, 44307, 44310, 44310, 44310, 44310, 44310, 44310, 44310, 44310, 44317, 44317, 44317, 44317, 44317, 44317, 44317, 44317, 44324, 44324, 44324, 44324, 44324, 44324, 44324, 44324, 44330, 44330, 44330, 44330, 44330, 44330, 44330, 44330, 44338, 44338, 44338, 44338, 44338, 44338, 44338, 44338, 44348, 44348, 44348, 44348, 44348, 44348, 44348, 44348)),
+  Treatment = rep(c("HW", "HW", "Control", "Control", "Control", "HW", "Control", "HW"), each = 7),
+  Cosm = rep(c(2, 6, 14, 15, 17, 19, 22, 24), 7),
+  chla = runif(56, 10, 12) # random data
+)
+
+# Calculate mean chla for Control by day
+control_bm <- chla %>% 
+  filter(Treatment == "Control") %>%
+  group_by(Day) %>% 
+  dplyr::summarize(mean_chla_control = mean(chla, na.rm = TRUE))
+
+# Calculate mean chla for all treatments by day and cosm
+chla_all_treat <- chla %>% 
+  group_by(Day, Cosm, Treatment) %>% 
+  dplyr::summarize(mean_chla = mean(chla, na.rm = TRUE))
+
+# Merge the control and treatment data
+chla_merged <- merge(chla_all_treat, control_bm, by = "Day")
+
+# Remove Day -4
+chla_merged <- chla_merged %>% 
+  filter(Day != -4)
+
+# Calculate the difference between HW and control
+chla_merged <- chla_merged %>% 
+  mutate(diff = mean_chla - mean_chla_control)
+
+# Filter HW data
+hw_data <- chla_merged %>% filter(Treatment == "HW")
+
+# Define day ranges
+day_ranges <- list(c(3, 10), c(15, 24), c(30, 38))
+
+# Add a range column to hw_data with the correct order
+hw_data <- hw_data %>% 
+  mutate(range = case_when(
+    Day >= 3 & Day <= 10 ~ "3-10",
+    Day >= 15 & Day <= 24 ~ "15-24",
+    Day >= 30 & Day <= 38 ~ "30-38",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(range))
+
+# Set the order of the range levels
+hw_data$range <- factor(hw_data$range, levels = c("3-10", "15-24", "30-38"))
+
+# Function to fit linear model
+fit_lm <- function(data) {
+  lm_model <- lm(diff ~ Day, data = data)
+  return(lm_model)
+}
+
+# Apply function to each day range and store models
+lm_models <- hw_data %>%
+  group_by(range) %>%
+  do(model = fit_lm(.))
+
+# Create a combined plot
+combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
+  geom_point(aes(color = as.factor(Cosm)), size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Day", y = "Difference (HW - Control)") +
+  theme_minimal(base_size = 15) +
+  theme(legend.position = "none") +
+  facet_wrap(~ range, scales = "free", ncol = 3)
+
+print(combined_plot)
+
+
+
+
+
+
+
+
+
+# Calculate mean chla for Control by day
+control_bm <- chla %>% 
+  filter(Treatment == "Control") %>%
+  group_by(Day) %>% 
+  dplyr::summarize(mean_chla_control = mean(chla, na.rm = TRUE))
+
+# Calculate mean chla for all treatments by day and cosm
+chla_all_treat <- chla %>% 
+  group_by(Day, Cosm, Treatment) %>% 
+  dplyr::summarize(mean_chla = mean(chla, na.rm = TRUE))
+
+# Merge the control and treatment data
+chla_merged <- merge(chla_all_treat, control_bm, by = "Day")
+
+# Remove Day -4
+chla_merged <- chla_merged %>% 
+  filter(Day != -4)
+
+# Calculate the difference between HW and control
+chla_merged <- chla_merged %>% 
+  mutate(diff = mean_chla - mean_chla_control)
+
+# Filter HW data
+hw_data <- chla_merged %>% filter(Treatment == "HW")
+
+# Define day ranges
+day_ranges <- list(c(3, 10), c(15, 24), c(30, 38))
+
+# Add a range column to hw_data with the correct order
+hw_data <- hw_data %>% 
+  mutate(range = case_when(
+    Day >= 3 & Day <= 10 ~ "3-10",
+    Day >= 15 & Day <= 24 ~ "15-24",
+    Day >= 30 & Day <= 38 ~ "30-38",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(range))
+
+# Set the order of the range levels
+hw_data$range <- factor(hw_data$range, levels = c("3-10", "15-24", "30-38"))
+
+# Function to fit linear model
+fit_lm <- function(data) {
+  lm_model <- lm(diff ~ Day, data = data)
+  return(lm_model)
+}
+
+# Apply function to each day range and store models
+lm_models <- hw_data %>%
+  group_by(range) %>%
+  do(model = fit_lm(.))
+
+# Extract slopes
+slopes <- lm_models %>%
+  rowwise() %>%
+  mutate(slope = coef(model)["Day"]) %>%
+  select(range, slope) %>%
+  ungroup()
+
+# Create a combined plot
+combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
+  geom_point(aes(color = as.factor(Cosm)), size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Day", y = "Difference (HW - Control)") +
+  theme_minimal(base_size = 15) +
+  theme(legend.position = "none") +
+  facet_wrap(~ range, scales = "free", ncol = 3)
+
+# Add slope annotations
+combined_plot <- combined_plot +
+  geom_text(data = slopes, aes(x = Inf, y = Inf, label = paste0("Slope: ", round(slope, 3))), 
+            hjust = 1.1, vjust = 1.1, size = 5)
+
+print(combined_plot)
+
+
+
+
+
+
+
+
+
+# Calculate mean ox for Control by day
+control_bm <- ox %>% 
+  filter(Treatment == "Control") %>%
+  group_by(Day) %>% 
+  dplyr::summarize(mean_ox_control = mean(ox, na.rm = TRUE))
+
+# Calculate mean ox for all treatments by day and cosm
+ox_all_treat <- ox %>% 
+  group_by(Day, Cosm, Treatment) %>% 
+  dplyr::summarize(mean_ox = mean(ox, na.rm = TRUE))
+
+# Merge the control and treatment data
+ox_merged <- merge(ox_all_treat, control_bm, by = "Day")
+
+# Remove Day -4
+ox_merged <- ox_merged %>% 
+  filter(Day != -4)
+
+# Calculate the difference between HW and control
+ox_merged <- ox_merged %>% 
+  mutate(diff = mean_ox - mean_ox_control)
+
+# Filter HW data
+hw_data <- ox_merged %>% filter(Treatment == "HW")
+
+# Define day ranges
+day_ranges <- list(c(3, 10), c(15, 24), c(30, 38))
+
+# Add a range column to hw_data with the correct order
+hw_data <- hw_data %>% 
+  mutate(range = case_when(
+    Day >= 3 & Day <= 10 ~ "3-10",
+    Day >= 15 & Day <= 24 ~ "15-24",
+    Day >= 30 & Day <= 38 ~ "30-38",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(range))
+
+# Set the order of the range levels
+hw_data$range <- factor(hw_data$range, levels = c("3-10", "15-24", "30-38"))
+
+# Function to fit linear model
+fit_lm <- function(data) {
+  lm_model <- lm(diff ~ Day, data = data)
+  return(lm_model)
+}
+
+# Apply function to each day range and store models
+lm_models <- hw_data %>%
+  group_by(range) %>%
+  do(model = fit_lm(.))
+
+# Extract slopes
+slopes <- lm_models %>%
+  rowwise() %>%
+  mutate(slope = coef(model)["Day"]) %>%
+  select(range, slope) %>%
+  ungroup()
+
+# Create a combined plot
+combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
+  geom_point(aes(color = as.factor(Cosm)), size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Day", y = "Difference (HW - Control)") +
+  theme_bw(base_size = 15) +
+  theme(legend.position = "none") +
+  facet_wrap(~ range, scales = "free", ncol = 3)
+
+# Add slope annotations
+combined_plot <- combined_plot +
+  geom_text(data = slopes, aes(x = Inf, y = Inf, label = paste0("Slope: ", round(slope, 3))), 
+            hjust = 1.1, vjust = 1.2, size = 5)
+
+print(combined_plot)

@@ -1,7 +1,7 @@
 ---
 title: "Slowing down in recovery of phytoplankton community due to recurrent heatwaves"
 author: "Francesco Polazzo"
-date: "27 June, 2024"
+date: "28 June, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -74,8 +74,20 @@ The water temperature manipulation using the TENTACLE machinery [https://www.sci
 
 Oxygen, again, shows an impaired recovery after the third heatwave. The contrast with the first two heatwave is striking. Indeed, the first two heatwaves determined a decline in DO only while happening, with DO quickly returning to levels higher than the control. The third heatwave strongly decreased DO during its course, and slowed down its recovery in the post HW phase so that it never got back to control levels.
 <div class="figure" style="text-align: center">
-<img src="Slowing_down_v2_files/figure-html/oxygen_plot-1.png" alt="Dissolved oxygen dynamics over time. The red areas show the three heatwaves"  />
-<p class="caption">(\#fig:oxygen_plot)Dissolved oxygen dynamics over time. The red areas show the three heatwaves</p>
+<img src="Slowing_down_v2_files/figure-html/oxygen_plot-1.png" alt="Dissolved oxygen dynamics over time. The red areas show the three heatwaves. The figure shows the difference in DO between mesocosm undergoing the HWs treatment and the control (dashed line at zero)."  />
+<p class="caption">(\#fig:oxygen_plot)Dissolved oxygen dynamics over time. The red areas show the three heatwaves. The figure shows the difference in DO between mesocosm undergoing the HWs treatment and the control (dashed line at zero).</p>
+</div>
+
+We now look specifically at how the slope of recovery changes after each HW. To do that we look at the slope of the linear regression between two subsequent time points (during and after a HW) of the difference between DO in control and HW mesocosms.
+<div class="figure" style="text-align: center">
+<img src="Slowing_down_v2_files/figure-html/oxygen_slopes-1.png" alt="Change in the slope of the linear regression connecting two subsequent time point ((during and after a HW) of the difference between DO in control and HW mesocosms."  />
+<p class="caption">(\#fig:oxygen_slopes)Change in the slope of the linear regression connecting two subsequent time point ((during and after a HW) of the difference between DO in control and HW mesocosms.</p>
+</div>
+
+
+<div class="figure" style="text-align: center">
+<img src="Slowing_down_v2_files/figure-html/oxy_combined-1.png" alt="combined plot for manuscript"  />
+<p class="caption">(\#fig:oxy_combined)combined plot for manuscript</p>
 </div>
 
 Creating model for oxygen
@@ -267,6 +279,17 @@ Chlorophyll - a shows probably the most dramatic response. There is not much cha
 <p class="caption">(\#fig:chlorophyll_plot)CHlorophyll-a dynamics over time. The red areas show the three heatwaves</p>
 </div>
 
+
+We now look specifically at how the slope of recovery changes after each HW. To do that we look at the slope of the linear regression between two subsequent time points (during and after a HW) of the difference between chlorophyll - a concentration in control and HW mesocosms.
+<div class="figure" style="text-align: center">
+<img src="Slowing_down_v2_files/figure-html/chla_slopes-1.png" alt="Change in the slope of the linear regression connecting two subsequent time point (during and after a HW) of the difference between chlorophyll - a concentration in control and HW mesocosms."  />
+<p class="caption">(\#fig:chla_slopes)Change in the slope of the linear regression connecting two subsequent time point (during and after a HW) of the difference between chlorophyll - a concentration in control and HW mesocosms.</p>
+</div>
+
+<div class="figure" style="text-align: center">
+<img src="Slowing_down_v2_files/figure-html/chla_combined-1.png" alt="combined plot for manuscript"  />
+<p class="caption">(\#fig:chla_combined)combined plot for manuscript</p>
+</div>
 
 <table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
  <thead>
