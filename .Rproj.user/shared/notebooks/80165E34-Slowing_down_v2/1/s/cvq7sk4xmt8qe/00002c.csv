@@ -1,1 +1,0 @@
-"0","filtered_combined_data %>% filter(Treatment == ""HW"") %>% summarise(max(Temp))"

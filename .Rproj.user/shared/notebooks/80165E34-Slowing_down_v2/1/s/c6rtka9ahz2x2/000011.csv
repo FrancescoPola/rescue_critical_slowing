@@ -1,4 +1,0 @@
-"0",""
-"0","# Visualization "
-"0","emmip(model_ox, Treatment ~ Day, at = list(Day = days_of_interest), CIs = TRUE)"
-"0",""

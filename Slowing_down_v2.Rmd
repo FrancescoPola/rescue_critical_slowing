@@ -186,7 +186,7 @@ ox_plot <- ggplot(tot_ox_dynamics_filtered, aes(x = Day, y = mean_diff_ox, color
   coord_cartesian(ylim = y_limits) + 
   annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
   annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
-  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red")
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") + labs(tag = "(a)")
 
 ```
 Oxygen, again, shows an impaired recovery after the third heatwave. The contrast with the first two heatwave is striking. Indeed, the first two heatwaves determined a decline in DO only while happening, with DO quickly returning to levels higher than the control. The third heatwave strongly decreased DO during its course, and slowed down its recovery in the post HW phase so that it never got back to control levels.
@@ -263,7 +263,7 @@ combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
   labs(x = "Day", y = "Difference (HW - Control)") +
   theme_bw(base_size = 15) +
   theme(legend.position = "none") +
-  facet_wrap(~ range, scales = "free", ncol = 3)
+  facet_wrap(~ range, scales = "free", ncol = 3) + labs(tag = "(b)")
 
 # Add slope annotations
 combined_plot <- combined_plot +
@@ -442,7 +442,7 @@ chla_plot <- ggplot(tot_chla_dynamics_filtered, aes(x = Day, y = mean_diff_chla,
   coord_cartesian(ylim = y_limits) + 
   annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
   annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
-  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red")
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") + labs(tag = "(a)")
 
 
 ```
@@ -524,7 +524,7 @@ combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
   labs(x = "Day", y = "Difference (HW - Control)") +
   theme_bw(base_size = 15) +
   theme(legend.position = "none") +
-  facet_wrap(~ range, scales = "free", ncol = 3)
+  facet_wrap(~ range, scales = "free", ncol = 3) + labs(tag = "(b)")
 
 # Add slope annotations
 combined_plot <- combined_plot +

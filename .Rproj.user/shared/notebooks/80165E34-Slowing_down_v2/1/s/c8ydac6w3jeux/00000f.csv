@@ -18,5 +18,5 @@
 "0","# Save the flextable as a Word document"
 "0","doc <- read_docx()"
 "0","doc <- body_add_flextable(doc, value = ft)"
-"0","print(doc, target = ""Ox_table_output.docx"")"
+"0","print(doc, target = ""Tables/Ox_table_output.docx"")"
 "0",""
