@@ -1,7 +1,7 @@
 ---
 title: "Slowing down in recovery of phytoplankton community due to recurrent heatwaves"
 author: "Francesco Polazzo"
-date: "28 June, 2024"
+date: "09 July, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -21,7 +21,7 @@ editor_options:
 
 # Introduction
 
-With this paper (?) we wanted to test two major ecological framework that are commonly applied to systems facing repeated perturbations: 
+With this article we wanted to test two major ecological framework that are commonly applied to systems facing repeated perturbations: 
 
 - Critical slowing down (https://www.journals.uchicago.edu/doi/full/10.1086/516845) (https://www.nature.com/articles/nature10723)
 
@@ -40,9 +40,7 @@ Community rescue occurs when ecological or evolutionary processes restore positi
 
 Here we test whether a semi-natural phytoplankton community undergoing repeated heatwave perturbation shows signs of critical slowing down or community rescue. 
 
-# Material and methods
 
-I just want to mention that I am using only data up to day 38 because I want the same amount of time after each heatwave to compare the recovery after heatwaves. So no longer recovery is assessed and all data points after are likely not going to be used.
 
 # Results
 ## Water temperature time series
@@ -104,6 +102,7 @@ Not bad.
 <table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
  <thead>
   <tr>
+   <th style="text-align:left;">   </th>
    <th style="text-align:left;"> effect </th>
    <th style="text-align:left;"> group </th>
    <th style="text-align:left;"> term </th>
@@ -112,10 +111,13 @@ Not bad.
    <th style="text-align:right;"> statistic </th>
    <th style="text-align:right;"> df </th>
    <th style="text-align:right;"> p.value </th>
+   <th style="text-align:right;"> 2.5% </th>
+   <th style="text-align:right;"> 97.5% </th>
   </tr>
  </thead>
 <tbody>
   <tr>
+   <td style="text-align:left;"> (Intercept) </td>
    <td style="text-align:left;"> fixed </td>
    <td style="text-align:left;"> NA </td>
    <td style="text-align:left;"> (Intercept) </td>
@@ -124,8 +126,11 @@ Not bad.
    <td style="text-align:right;"> 62.613 </td>
    <td style="text-align:right;"> 26.146 </td>
    <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 2.361 </td>
+   <td style="text-align:right;"> 2.508 </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> TreatmentHW </td>
    <td style="text-align:left;"> fixed </td>
    <td style="text-align:left;"> NA </td>
    <td style="text-align:left;"> TreatmentHW </td>
@@ -134,8 +139,11 @@ Not bad.
    <td style="text-align:right;"> 1.090 </td>
    <td style="text-align:right;"> 26.146 </td>
    <td style="text-align:right;"> 0.286 </td>
+   <td style="text-align:right;"> -0.044 </td>
+   <td style="text-align:right;"> 0.164 </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> Day </td>
    <td style="text-align:left;"> fixed </td>
    <td style="text-align:left;"> NA </td>
    <td style="text-align:left;"> Day </td>
@@ -144,8 +152,11 @@ Not bad.
    <td style="text-align:right;"> 1.957 </td>
    <td style="text-align:right;"> 46.000 </td>
    <td style="text-align:right;"> 0.056 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.007 </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> TreatmentHW:Day </td>
    <td style="text-align:left;"> fixed </td>
    <td style="text-align:left;"> NA </td>
    <td style="text-align:left;"> TreatmentHW:Day </td>
@@ -154,26 +165,8 @@ Not bad.
    <td style="text-align:right;"> -2.689 </td>
    <td style="text-align:right;"> 46.000 </td>
    <td style="text-align:right;"> 0.010 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> ran_pars </td>
-   <td style="text-align:left;"> Cosm </td>
-   <td style="text-align:left;"> sd__(Intercept) </td>
-   <td style="text-align:right;"> 0.015 </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> ran_pars </td>
-   <td style="text-align:left;"> Residual </td>
-   <td style="text-align:left;"> sd__Observation </td>
-   <td style="text-align:right;"> 0.130 </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> -0.012 </td>
+   <td style="text-align:right;"> -0.002 </td>
   </tr>
 </tbody>
 </table>
@@ -291,9 +284,14 @@ We now look specifically at how the slope of recovery changes after each HW. To 
 <p class="caption">(\#fig:chla_combined)combined plot for manuscript</p>
 </div>
 
+
+Creating model for oxygen
+
+
 <table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
  <thead>
   <tr>
+   <th style="text-align:left;">   </th>
    <th style="text-align:left;"> effect </th>
    <th style="text-align:left;"> group </th>
    <th style="text-align:left;"> term </th>
@@ -302,10 +300,13 @@ We now look specifically at how the slope of recovery changes after each HW. To 
    <th style="text-align:right;"> statistic </th>
    <th style="text-align:right;"> df </th>
    <th style="text-align:right;"> p.value </th>
+   <th style="text-align:right;"> 2.5% </th>
+   <th style="text-align:right;"> 97.5% </th>
   </tr>
  </thead>
 <tbody>
   <tr>
+   <td style="text-align:left;"> (Intercept) </td>
    <td style="text-align:left;"> fixed </td>
    <td style="text-align:left;"> NA </td>
    <td style="text-align:left;"> (Intercept) </td>
@@ -314,8 +315,11 @@ We now look specifically at how the slope of recovery changes after each HW. To 
    <td style="text-align:right;"> 3.071 </td>
    <td style="text-align:right;"> 25.799 </td>
    <td style="text-align:right;"> 0.005 </td>
+   <td style="text-align:right;"> 0.252 </td>
+   <td style="text-align:right;"> 1.062 </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> TreatmentHW </td>
    <td style="text-align:left;"> fixed </td>
    <td style="text-align:left;"> NA </td>
    <td style="text-align:left;"> TreatmentHW </td>
@@ -324,8 +328,11 @@ We now look specifically at how the slope of recovery changes after each HW. To 
    <td style="text-align:right;"> -2.148 </td>
    <td style="text-align:right;"> 25.799 </td>
    <td style="text-align:right;"> 0.041 </td>
+   <td style="text-align:right;"> -1.222 </td>
+   <td style="text-align:right;"> -0.078 </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> Day </td>
    <td style="text-align:left;"> fixed </td>
    <td style="text-align:left;"> NA </td>
    <td style="text-align:left;"> Day </td>
@@ -334,8 +341,11 @@ We now look specifically at how the slope of recovery changes after each HW. To 
    <td style="text-align:right;"> 1.108 </td>
    <td style="text-align:right;"> 46.000 </td>
    <td style="text-align:right;"> 0.274 </td>
+   <td style="text-align:right;"> -0.008 </td>
+   <td style="text-align:right;"> 0.029 </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> TreatmentHW:Day </td>
    <td style="text-align:left;"> fixed </td>
    <td style="text-align:left;"> NA </td>
    <td style="text-align:left;"> TreatmentHW:Day </td>
@@ -344,26 +354,8 @@ We now look specifically at how the slope of recovery changes after each HW. To 
    <td style="text-align:right;"> -1.440 </td>
    <td style="text-align:right;"> 46.000 </td>
    <td style="text-align:right;"> 0.157 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> ran_pars </td>
-   <td style="text-align:left;"> Cosm </td>
-   <td style="text-align:left;"> sd__(Intercept) </td>
-   <td style="text-align:right;"> 0.089 </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> ran_pars </td>
-   <td style="text-align:left;"> Residual </td>
-   <td style="text-align:left;"> sd__Observation </td>
-   <td style="text-align:right;"> 0.711 </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> -0.046 </td>
+   <td style="text-align:right;"> 0.007 </td>
   </tr>
 </tbody>
 </table>
@@ -465,9 +457,9 @@ As expected from the plot, the estimate increases with time, and there is a big 
 
 
 Visualization of model prediction (linear trend)
-![](Slowing_down_v2_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](Slowing_down_v2_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
-
+## Compositional dynamics
 
 ### Relative biomass 
 Now we want to see if this gradual decline in oxygen and chla is related to taxonomic differences. 
@@ -485,7 +477,6 @@ The relative abundance of different groups changes largely over time, and may al
 
 
 
-## Compositional dynamics
 
 we now look if this visual turnover in relative groups biomass is statistically significant
 
@@ -552,25 +543,881 @@ Significant differences on day 2, 10, 30, and 38
 
 
 
+### SIMPER
+
+SIMPER analysis - results and biomass comparision by day
 
 
 
-NMDS plot
+
+Table results Day -4 
+
+
+<table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>(\#tab:unnamed-chunk-22)SIMPER Analysis Results for Day -4: HW vs Control</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> species </th>
+   <th style="text-align:right;"> average </th>
+   <th style="text-align:right;"> sd </th>
+   <th style="text-align:right;"> ratio </th>
+   <th style="text-align:right;"> ava </th>
+   <th style="text-align:right;"> avb </th>
+   <th style="text-align:right;"> cumsum </th>
+   <th style="text-align:right;"> p </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:right;"> 0.203 </td>
+   <td style="text-align:right;"> 0.169 </td>
+   <td style="text-align:right;"> 1.199 </td>
+   <td style="text-align:right;"> 293.749 </td>
+   <td style="text-align:right;"> 99.457 </td>
+   <td style="text-align:right;"> 0.365 </td>
+   <td style="text-align:right;"> 0.401 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:right;"> 0.130 </td>
+   <td style="text-align:right;"> 0.131 </td>
+   <td style="text-align:right;"> 0.998 </td>
+   <td style="text-align:right;"> 228.716 </td>
+   <td style="text-align:right;"> 42.859 </td>
+   <td style="text-align:right;"> 0.599 </td>
+   <td style="text-align:right;"> 0.083 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:right;"> 0.128 </td>
+   <td style="text-align:right;"> 0.099 </td>
+   <td style="text-align:right;"> 1.302 </td>
+   <td style="text-align:right;"> 215.925 </td>
+   <td style="text-align:right;"> 206.102 </td>
+   <td style="text-align:right;"> 0.829 </td>
+   <td style="text-align:right;"> 0.319 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:right;"> 0.071 </td>
+   <td style="text-align:right;"> 0.036 </td>
+   <td style="text-align:right;"> 1.983 </td>
+   <td style="text-align:right;"> 109.057 </td>
+   <td style="text-align:right;"> 35.663 </td>
+   <td style="text-align:right;"> 0.956 </td>
+   <td style="text-align:right;"> 0.177 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:right;"> 0.014 </td>
+   <td style="text-align:right;"> 0.015 </td>
+   <td style="text-align:right;"> 0.925 </td>
+   <td style="text-align:right;"> 6.313 </td>
+   <td style="text-align:right;"> 10.402 </td>
+   <td style="text-align:right;"> 0.980 </td>
+   <td style="text-align:right;"> 0.608 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:right;"> 0.007 </td>
+   <td style="text-align:right;"> 0.006 </td>
+   <td style="text-align:right;"> 1.143 </td>
+   <td style="text-align:right;"> 14.110 </td>
+   <td style="text-align:right;"> 2.809 </td>
+   <td style="text-align:right;"> 0.993 </td>
+   <td style="text-align:right;"> 0.728 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> 0.004 </td>
+   <td style="text-align:right;"> 0.692 </td>
+   <td style="text-align:right;"> 6.179 </td>
+   <td style="text-align:right;"> 0.373 </td>
+   <td style="text-align:right;"> 0.997 </td>
+   <td style="text-align:right;"> 0.396 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.782 </td>
+   <td style="text-align:right;"> 0.559 </td>
+   <td style="text-align:right;"> 1.160 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.875 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> NaN </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+Table results Day 3
+
+
+<table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>(\#tab:unnamed-chunk-24)SIMPER Analysis Results for Day 3: HW vs Control</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> species </th>
+   <th style="text-align:right;"> average </th>
+   <th style="text-align:right;"> sd </th>
+   <th style="text-align:right;"> ratio </th>
+   <th style="text-align:right;"> ava </th>
+   <th style="text-align:right;"> avb </th>
+   <th style="text-align:right;"> cumsum </th>
+   <th style="text-align:right;"> p </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:right;"> 0.475 </td>
+   <td style="text-align:right;"> 0.272 </td>
+   <td style="text-align:right;"> 1.745 </td>
+   <td style="text-align:right;"> 75.579 </td>
+   <td style="text-align:right;"> 230.067 </td>
+   <td style="text-align:right;"> 0.713 </td>
+   <td style="text-align:right;"> 0.051 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:right;"> 0.067 </td>
+   <td style="text-align:right;"> 0.078 </td>
+   <td style="text-align:right;"> 0.861 </td>
+   <td style="text-align:right;"> 8.011 </td>
+   <td style="text-align:right;"> 21.363 </td>
+   <td style="text-align:right;"> 0.814 </td>
+   <td style="text-align:right;"> 0.278 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:right;"> 0.044 </td>
+   <td style="text-align:right;"> 0.076 </td>
+   <td style="text-align:right;"> 0.587 </td>
+   <td style="text-align:right;"> 16.870 </td>
+   <td style="text-align:right;"> 1.239 </td>
+   <td style="text-align:right;"> 0.880 </td>
+   <td style="text-align:right;"> 0.908 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:right;"> 0.040 </td>
+   <td style="text-align:right;"> 0.059 </td>
+   <td style="text-align:right;"> 0.672 </td>
+   <td style="text-align:right;"> 0.342 </td>
+   <td style="text-align:right;"> 17.338 </td>
+   <td style="text-align:right;"> 0.940 </td>
+   <td style="text-align:right;"> 0.037 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:right;"> 0.028 </td>
+   <td style="text-align:right;"> 0.027 </td>
+   <td style="text-align:right;"> 1.031 </td>
+   <td style="text-align:right;"> 10.569 </td>
+   <td style="text-align:right;"> 17.057 </td>
+   <td style="text-align:right;"> 0.982 </td>
+   <td style="text-align:right;"> 0.797 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:right;"> 0.006 </td>
+   <td style="text-align:right;"> 0.009 </td>
+   <td style="text-align:right;"> 0.657 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 1.684 </td>
+   <td style="text-align:right;"> 0.990 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:right;"> 0.004 </td>
+   <td style="text-align:right;"> 0.005 </td>
+   <td style="text-align:right;"> 0.811 </td>
+   <td style="text-align:right;"> 1.439 </td>
+   <td style="text-align:right;"> 0.804 </td>
+   <td style="text-align:right;"> 0.997 </td>
+   <td style="text-align:right;"> 0.944 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> 0.701 </td>
+   <td style="text-align:right;"> 0.186 </td>
+   <td style="text-align:right;"> 0.747 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.194 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> NaN </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+Table results Day 10
+
+
+<table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>(\#tab:unnamed-chunk-26)SIMPER Analysis Results for Day 10: HW vs Control</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> species </th>
+   <th style="text-align:right;"> average </th>
+   <th style="text-align:right;"> sd </th>
+   <th style="text-align:right;"> ratio </th>
+   <th style="text-align:right;"> ava </th>
+   <th style="text-align:right;"> avb </th>
+   <th style="text-align:right;"> cumsum </th>
+   <th style="text-align:right;"> p </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:right;"> 0.238 </td>
+   <td style="text-align:right;"> 0.218 </td>
+   <td style="text-align:right;"> 1.093 </td>
+   <td style="text-align:right;"> 32.657 </td>
+   <td style="text-align:right;"> 135.963 </td>
+   <td style="text-align:right;"> 0.363 </td>
+   <td style="text-align:right;"> 0.031 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:right;"> 0.128 </td>
+   <td style="text-align:right;"> 0.109 </td>
+   <td style="text-align:right;"> 1.176 </td>
+   <td style="text-align:right;"> 9.747 </td>
+   <td style="text-align:right;"> 65.023 </td>
+   <td style="text-align:right;"> 0.559 </td>
+   <td style="text-align:right;"> 0.026 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:right;"> 0.118 </td>
+   <td style="text-align:right;"> 0.085 </td>
+   <td style="text-align:right;"> 1.387 </td>
+   <td style="text-align:right;"> 13.064 </td>
+   <td style="text-align:right;"> 45.836 </td>
+   <td style="text-align:right;"> 0.740 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:right;"> 0.085 </td>
+   <td style="text-align:right;"> 0.091 </td>
+   <td style="text-align:right;"> 0.929 </td>
+   <td style="text-align:right;"> 45.517 </td>
+   <td style="text-align:right;"> 17.516 </td>
+   <td style="text-align:right;"> 0.869 </td>
+   <td style="text-align:right;"> 0.975 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:right;"> 0.060 </td>
+   <td style="text-align:right;"> 0.068 </td>
+   <td style="text-align:right;"> 0.878 </td>
+   <td style="text-align:right;"> 5.035 </td>
+   <td style="text-align:right;"> 34.741 </td>
+   <td style="text-align:right;"> 0.960 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:right;"> 0.019 </td>
+   <td style="text-align:right;"> 0.022 </td>
+   <td style="text-align:right;"> 0.873 </td>
+   <td style="text-align:right;"> 3.339 </td>
+   <td style="text-align:right;"> 11.008 </td>
+   <td style="text-align:right;"> 0.990 </td>
+   <td style="text-align:right;"> 0.098 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:right;"> 0.004 </td>
+   <td style="text-align:right;"> 0.006 </td>
+   <td style="text-align:right;"> 0.762 </td>
+   <td style="text-align:right;"> 0.550 </td>
+   <td style="text-align:right;"> 2.366 </td>
+   <td style="text-align:right;"> 0.997 </td>
+   <td style="text-align:right;"> 0.634 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> 0.751 </td>
+   <td style="text-align:right;"> 1.014 </td>
+   <td style="text-align:right;"> 0.765 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.948 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> NaN </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+Table results Day 15
+
+
+<table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>(\#tab:unnamed-chunk-28)SIMPER Analysis Results for Day 15: HW vs Control</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> species </th>
+   <th style="text-align:right;"> average </th>
+   <th style="text-align:right;"> sd </th>
+   <th style="text-align:right;"> ratio </th>
+   <th style="text-align:right;"> ava </th>
+   <th style="text-align:right;"> avb </th>
+   <th style="text-align:right;"> cumsum </th>
+   <th style="text-align:right;"> p </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:right;"> 0.404 </td>
+   <td style="text-align:right;"> 0.237 </td>
+   <td style="text-align:right;"> 1.705 </td>
+   <td style="text-align:right;"> 68.053 </td>
+   <td style="text-align:right;"> 307.782 </td>
+   <td style="text-align:right;"> 0.651 </td>
+   <td style="text-align:right;"> 0.120 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:right;"> 0.086 </td>
+   <td style="text-align:right;"> 0.084 </td>
+   <td style="text-align:right;"> 1.013 </td>
+   <td style="text-align:right;"> 46.209 </td>
+   <td style="text-align:right;"> 26.590 </td>
+   <td style="text-align:right;"> 0.788 </td>
+   <td style="text-align:right;"> 0.927 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:right;"> 0.058 </td>
+   <td style="text-align:right;"> 0.072 </td>
+   <td style="text-align:right;"> 0.806 </td>
+   <td style="text-align:right;"> 10.681 </td>
+   <td style="text-align:right;"> 29.374 </td>
+   <td style="text-align:right;"> 0.882 </td>
+   <td style="text-align:right;"> 0.062 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:right;"> 0.033 </td>
+   <td style="text-align:right;"> 0.020 </td>
+   <td style="text-align:right;"> 1.691 </td>
+   <td style="text-align:right;"> 15.438 </td>
+   <td style="text-align:right;"> 20.023 </td>
+   <td style="text-align:right;"> 0.936 </td>
+   <td style="text-align:right;"> 0.804 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:right;"> 0.028 </td>
+   <td style="text-align:right;"> 0.023 </td>
+   <td style="text-align:right;"> 1.225 </td>
+   <td style="text-align:right;"> 8.345 </td>
+   <td style="text-align:right;"> 15.295 </td>
+   <td style="text-align:right;"> 0.981 </td>
+   <td style="text-align:right;"> 0.339 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:right;"> 0.008 </td>
+   <td style="text-align:right;"> 0.008 </td>
+   <td style="text-align:right;"> 1.065 </td>
+   <td style="text-align:right;"> 0.773 </td>
+   <td style="text-align:right;"> 4.510 </td>
+   <td style="text-align:right;"> 0.994 </td>
+   <td style="text-align:right;"> 0.113 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.004 </td>
+   <td style="text-align:right;"> 0.626 </td>
+   <td style="text-align:right;"> 1.057 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.998 </td>
+   <td style="text-align:right;"> 0.893 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:right;"> 0.001 </td>
+   <td style="text-align:right;"> 0.001 </td>
+   <td style="text-align:right;"> 2.042 </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.639 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> NaN </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+Table results Day 24
+
+
+<table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>(\#tab:unnamed-chunk-30)SIMPER Analysis Results for Day 24: HW vs Control</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> species </th>
+   <th style="text-align:right;"> average </th>
+   <th style="text-align:right;"> sd </th>
+   <th style="text-align:right;"> ratio </th>
+   <th style="text-align:right;"> ava </th>
+   <th style="text-align:right;"> avb </th>
+   <th style="text-align:right;"> cumsum </th>
+   <th style="text-align:right;"> p </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:right;"> 0.223 </td>
+   <td style="text-align:right;"> 0.318 </td>
+   <td style="text-align:right;"> 0.702 </td>
+   <td style="text-align:right;"> 456.690 </td>
+   <td style="text-align:right;"> 21.977 </td>
+   <td style="text-align:right;"> 0.363 </td>
+   <td style="text-align:right;"> 0.789 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:right;"> 0.138 </td>
+   <td style="text-align:right;"> 0.142 </td>
+   <td style="text-align:right;"> 0.972 </td>
+   <td style="text-align:right;"> 80.832 </td>
+   <td style="text-align:right;"> 125.624 </td>
+   <td style="text-align:right;"> 0.589 </td>
+   <td style="text-align:right;"> 0.767 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:right;"> 0.098 </td>
+   <td style="text-align:right;"> 0.153 </td>
+   <td style="text-align:right;"> 0.636 </td>
+   <td style="text-align:right;"> 29.724 </td>
+   <td style="text-align:right;"> 53.875 </td>
+   <td style="text-align:right;"> 0.748 </td>
+   <td style="text-align:right;"> 0.551 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:right;"> 0.070 </td>
+   <td style="text-align:right;"> 0.080 </td>
+   <td style="text-align:right;"> 0.881 </td>
+   <td style="text-align:right;"> 33.332 </td>
+   <td style="text-align:right;"> 23.210 </td>
+   <td style="text-align:right;"> 0.863 </td>
+   <td style="text-align:right;"> 0.381 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:right;"> 0.042 </td>
+   <td style="text-align:right;"> 0.042 </td>
+   <td style="text-align:right;"> 1.014 </td>
+   <td style="text-align:right;"> 6.142 </td>
+   <td style="text-align:right;"> 23.099 </td>
+   <td style="text-align:right;"> 0.932 </td>
+   <td style="text-align:right;"> 0.078 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:right;"> 0.023 </td>
+   <td style="text-align:right;"> 0.027 </td>
+   <td style="text-align:right;"> 0.856 </td>
+   <td style="text-align:right;"> 23.128 </td>
+   <td style="text-align:right;"> 1.110 </td>
+   <td style="text-align:right;"> 0.970 </td>
+   <td style="text-align:right;"> 0.365 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:right;"> 0.016 </td>
+   <td style="text-align:right;"> 0.008 </td>
+   <td style="text-align:right;"> 2.119 </td>
+   <td style="text-align:right;"> 21.166 </td>
+   <td style="text-align:right;"> 4.900 </td>
+   <td style="text-align:right;"> 0.997 </td>
+   <td style="text-align:right;"> 0.416 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 1.077 </td>
+   <td style="text-align:right;"> 1.106 </td>
+   <td style="text-align:right;"> 0.848 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.565 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> NaN </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+Table results Day 30
+
+
+<table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>(\#tab:unnamed-chunk-32)SIMPER Analysis Results for Day 30: HW vs Control</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> species </th>
+   <th style="text-align:right;"> average </th>
+   <th style="text-align:right;"> sd </th>
+   <th style="text-align:right;"> ratio </th>
+   <th style="text-align:right;"> ava </th>
+   <th style="text-align:right;"> avb </th>
+   <th style="text-align:right;"> cumsum </th>
+   <th style="text-align:right;"> p </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:right;"> 0.308 </td>
+   <td style="text-align:right;"> 0.249 </td>
+   <td style="text-align:right;"> 1.238 </td>
+   <td style="text-align:right;"> 31.725 </td>
+   <td style="text-align:right;"> 165.021 </td>
+   <td style="text-align:right;"> 0.429 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:right;"> 0.171 </td>
+   <td style="text-align:right;"> 0.162 </td>
+   <td style="text-align:right;"> 1.057 </td>
+   <td style="text-align:right;"> 41.734 </td>
+   <td style="text-align:right;"> 99.096 </td>
+   <td style="text-align:right;"> 0.666 </td>
+   <td style="text-align:right;"> 0.905 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:right;"> 0.106 </td>
+   <td style="text-align:right;"> 0.154 </td>
+   <td style="text-align:right;"> 0.689 </td>
+   <td style="text-align:right;"> 12.816 </td>
+   <td style="text-align:right;"> 59.473 </td>
+   <td style="text-align:right;"> 0.814 </td>
+   <td style="text-align:right;"> 0.259 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:right;"> 0.091 </td>
+   <td style="text-align:right;"> 0.088 </td>
+   <td style="text-align:right;"> 1.033 </td>
+   <td style="text-align:right;"> 2.670 </td>
+   <td style="text-align:right;"> 53.407 </td>
+   <td style="text-align:right;"> 0.940 </td>
+   <td style="text-align:right;"> 0.033 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:right;"> 0.027 </td>
+   <td style="text-align:right;"> 0.024 </td>
+   <td style="text-align:right;"> 1.112 </td>
+   <td style="text-align:right;"> 11.628 </td>
+   <td style="text-align:right;"> 12.327 </td>
+   <td style="text-align:right;"> 0.977 </td>
+   <td style="text-align:right;"> 0.582 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:right;"> 0.009 </td>
+   <td style="text-align:right;"> 0.008 </td>
+   <td style="text-align:right;"> 1.079 </td>
+   <td style="text-align:right;"> 5.289 </td>
+   <td style="text-align:right;"> 3.337 </td>
+   <td style="text-align:right;"> 0.989 </td>
+   <td style="text-align:right;"> 0.971 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:right;"> 0.006 </td>
+   <td style="text-align:right;"> 0.005 </td>
+   <td style="text-align:right;"> 1.121 </td>
+   <td style="text-align:right;"> 0.250 </td>
+   <td style="text-align:right;"> 3.758 </td>
+   <td style="text-align:right;"> 0.998 </td>
+   <td style="text-align:right;"> 0.090 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> 0.528 </td>
+   <td style="text-align:right;"> 0.835 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.971 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> NaN </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+Table results Day 38
+
+
+<table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>(\#tab:unnamed-chunk-34)SIMPER Analysis Results for Day 38: HW vs Control</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> species </th>
+   <th style="text-align:right;"> average </th>
+   <th style="text-align:right;"> sd </th>
+   <th style="text-align:right;"> ratio </th>
+   <th style="text-align:right;"> ava </th>
+   <th style="text-align:right;"> avb </th>
+   <th style="text-align:right;"> cumsum </th>
+   <th style="text-align:right;"> p </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:left;"> Cryptophyta </td>
+   <td style="text-align:right;"> 0.196 </td>
+   <td style="text-align:right;"> 0.138 </td>
+   <td style="text-align:right;"> 1.420 </td>
+   <td style="text-align:right;"> 4.567 </td>
+   <td style="text-align:right;"> 100.140 </td>
+   <td style="text-align:right;"> 0.267 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:left;"> Dinophyta </td>
+   <td style="text-align:right;"> 0.162 </td>
+   <td style="text-align:right;"> 0.184 </td>
+   <td style="text-align:right;"> 0.880 </td>
+   <td style="text-align:right;"> 3.471 </td>
+   <td style="text-align:right;"> 167.298 </td>
+   <td style="text-align:right;"> 0.486 </td>
+   <td style="text-align:right;"> 0.027 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:left;"> Chlorophyta </td>
+   <td style="text-align:right;"> 0.120 </td>
+   <td style="text-align:right;"> 0.155 </td>
+   <td style="text-align:right;"> 0.775 </td>
+   <td style="text-align:right;"> 3.894 </td>
+   <td style="text-align:right;"> 80.553 </td>
+   <td style="text-align:right;"> 0.650 </td>
+   <td style="text-align:right;"> 0.039 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:left;"> Charophyta </td>
+   <td style="text-align:right;"> 0.114 </td>
+   <td style="text-align:right;"> 0.054 </td>
+   <td style="text-align:right;"> 2.105 </td>
+   <td style="text-align:right;"> 32.507 </td>
+   <td style="text-align:right;"> 93.918 </td>
+   <td style="text-align:right;"> 0.804 </td>
+   <td style="text-align:right;"> 0.967 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:left;"> Ciliophora </td>
+   <td style="text-align:right;"> 0.061 </td>
+   <td style="text-align:right;"> 0.056 </td>
+   <td style="text-align:right;"> 1.079 </td>
+   <td style="text-align:right;"> 30.440 </td>
+   <td style="text-align:right;"> 25.503 </td>
+   <td style="text-align:right;"> 0.887 </td>
+   <td style="text-align:right;"> 0.967 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:left;"> Bacillariophyta </td>
+   <td style="text-align:right;"> 0.051 </td>
+   <td style="text-align:right;"> 0.036 </td>
+   <td style="text-align:right;"> 1.398 </td>
+   <td style="text-align:right;"> 11.421 </td>
+   <td style="text-align:right;"> 31.128 </td>
+   <td style="text-align:right;"> 0.955 </td>
+   <td style="text-align:right;"> 0.144 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:left;"> Cyanobacteria </td>
+   <td style="text-align:right;"> 0.024 </td>
+   <td style="text-align:right;"> 0.022 </td>
+   <td style="text-align:right;"> 1.128 </td>
+   <td style="text-align:right;"> 5.863 </td>
+   <td style="text-align:right;"> 14.455 </td>
+   <td style="text-align:right;"> 0.988 </td>
+   <td style="text-align:right;"> 0.944 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:left;"> Euglenophyta </td>
+   <td style="text-align:right;"> 0.009 </td>
+   <td style="text-align:right;"> 0.008 </td>
+   <td style="text-align:right;"> 1.053 </td>
+   <td style="text-align:right;"> 5.281 </td>
+   <td style="text-align:right;"> 3.097 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.967 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:left;"> Synurophyta </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> NaN </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 1.000 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+
+
+
+### NMDS plot
 Not sure if this makes sense, as the change in relative biomass plot looks much nicer
 <div class="figure" style="text-align: center">
 <img src="Slowing_down_v2_files/figure-html/composition_plot_NMDS-1.png" alt="Non-Metric Multidimensional Scaling plot of compositional dynamics over time."  />
 <p class="caption">(\#fig:composition_plot_NMDS)Non-Metric Multidimensional Scaling plot of compositional dynamics over time.</p>
 </div>
 
-
-
-# Discussion 
-
-This is just a preliminary check to see if there is enough interesting material for a paper. 
-Statistics look ok.
-
-
-Considering the small amount of experimental units, I am not sure how big we can go with this. 
-Yet, there are at least two things to consider:
-- heatwave are still a very hot topic (see continous literature being publish on HW)
-- Community rescue, but particualrly critical slowing down are very fancy theory to test. Critical slowing down is closely related to the whole regime shift / critical transition theory, thus linking it up with the growing concer of heatwaves, and particulalry recurring heatwaves could put us in a nice position. 

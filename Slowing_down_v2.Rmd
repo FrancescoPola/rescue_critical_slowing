@@ -39,11 +39,13 @@ library(officer)
 library(flextable)
 library(broom.mixed)
 library(lubridate)
+library(RColorBrewer)
+
 ```
 
 # Introduction
 
-With this paper (?) we wanted to test two major ecological framework that are commonly applied to systems facing repeated perturbations: 
+With this article we wanted to test two major ecological framework that are commonly applied to systems facing repeated perturbations: 
 
 - Critical slowing down (https://www.journals.uchicago.edu/doi/full/10.1086/516845) (https://www.nature.com/articles/nature10723)
 
@@ -62,9 +64,7 @@ Community rescue occurs when ecological or evolutionary processes restore positi
 
 Here we test whether a semi-natural phytoplankton community undergoing repeated heatwave perturbation shows signs of critical slowing down or community rescue. 
 
-# Material and methods
 
-I just want to mention that I am using only data up to day 38 because I want the same amount of time after each heatwave to compare the recovery after heatwaves. So no longer recovery is assessed and all data points after are likely not going to be used.
 
 # Results
 ## Water temperature time series
@@ -163,8 +163,9 @@ tot_ox_dynamics_filtered <- tot_ox_dynamics %>% filter(Treatment == "HW")
 
 
 ox_plot <- ggplot(tot_ox_dynamics_filtered, aes(x = Day, y = mean_diff_ox, color = Treatment, fill = Treatment)) +
-  geom_line(aes(group = Treatment), size = 1) +
-  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  geom_line(aes(group = Treatment), size = 1, color = "blue") +
+  geom_point(size = 2, color = "blue") +
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE, fill = "blue", color = "blue") +
   ylab("Dissolved oxygen \nDifference in mg/L") +
   xlab("Day") +
   viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
@@ -172,10 +173,10 @@ ox_plot <- ggplot(tot_ox_dynamics_filtered, aes(x = Day, y = mean_diff_ox, color
   scale_x_continuous(limits = c(-5, 40)) +
   theme_bw() +
   theme(legend.position = "none",                   # Remove legend
-        text = element_text(size = 14),             # Increase text size for all text elements
-        axis.title = element_text(size = 16),       # Increase axis title size
-        plot.title = element_text(size = 18),       # Increase plot title size
-        axis.text = element_text(size = 12),        # Increase axis text size
+  text = element_text(size = 20),             # Increase text size for all text elements
+        axis.title = element_text(size = 22),       # Increase axis title size
+        plot.title = element_text(size = 24),       # Increase plot title size
+        axis.text = element_text(size = 20),        # Increase axis text size
         axis.line = element_line(size = 0.5),       # Adjust axis line thickness
         panel.grid.major = element_blank(),         # Remove major gridlines
         panel.grid.minor = element_blank(),         # Remove minor gridlines
@@ -184,9 +185,9 @@ ox_plot <- ggplot(tot_ox_dynamics_filtered, aes(x = Day, y = mean_diff_ox, color
 
   geom_hline(yintercept = 0, linetype = "dashed") +
   coord_cartesian(ylim = y_limits) + 
-  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
-  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
-  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") + labs(tag = "(a)")
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = "red") + labs(tag = "(a)")
 
 ```
 Oxygen, again, shows an impaired recovery after the third heatwave. The contrast with the first two heatwave is striking. Indeed, the first two heatwaves determined a decline in DO only while happening, with DO quickly returning to levels higher than the control. The third heatwave strongly decreased DO during its course, and slowed down its recovery in the post HW phase so that it never got back to control levels.
@@ -261,9 +262,9 @@ combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
   geom_point(aes(color = as.factor(Cosm)), size = 3) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(x = "Day", y = "Difference (HW - Control)") +
-  theme_bw(base_size = 15) +
+  theme_bw(base_size = 22) +
   theme(legend.position = "none") +
-  facet_wrap(~ range, scales = "free", ncol = 3) + labs(tag = "(b)")
+  facet_wrap(~ paste("Day", range), scales = "free", ncol = 3) + labs(tag = "(b)")
 
 # Add slope annotations
 combined_plot <- combined_plot +
@@ -297,6 +298,18 @@ Not bad.
 ```{r}
 # Create a tidy summary
 tidy_summary <- tidy(model_ox)
+
+# Calculate 95% confidence intervals
+conf_intervals <- confint(model_ox, level = 0.95)
+
+# Convert conf_intervals to a data frame and set appropriate column names
+conf_intervals_df <- as.data.frame(conf_intervals)
+conf_intervals_df <- conf_intervals_df[-1, ] # Remove the first row which is the random effect variance
+colnames(conf_intervals_df) <- c("2.5%", "97.5%")
+
+# Add the confidence intervals to the tidy summary
+tidy_summary <- cbind(tidy_summary[c(1:4), ], conf_intervals_df[ c(2:5), ])
+
 # Print the summary in RMarkdown with kableExtra for formatting
 tidy_summary %>%
   mutate(across(where(is.numeric), ~ round(., 3))) %>%
@@ -306,7 +319,7 @@ tidy_summary %>%
 
 ```{r}
 # Save the tidy summary to a Word document
-tidy_summary <- tidy(model_ox) %>%
+tidy_summary <- tidy_summary %>%
   mutate(across(where(is.numeric), ~ round(., 3)))
 
 # Create a flextable object
@@ -419,8 +432,9 @@ tot_chla_dynamics_filtered <- tot_chla_dynamics %>% filter(Treatment == "HW")
 # Plot the data with faceting and aligned y-axis
 
 chla_plot <- ggplot(tot_chla_dynamics_filtered, aes(x = Day, y = mean_diff_chla, color = Treatment, fill = Treatment)) +
-  geom_line(aes(group = Treatment), size = 1) +
-  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  geom_line(aes(group = Treatment), size = 1, color = "blue") +
+  geom_point(size = 2, color = "blue") +
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE, fill = "blue", color = "blue") +
   ylab("Chlorophyll - a \nDifference in µg/L") +
   xlab("Day") +
   viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
@@ -428,10 +442,10 @@ chla_plot <- ggplot(tot_chla_dynamics_filtered, aes(x = Day, y = mean_diff_chla,
   scale_x_continuous(limits = c(-5, 40)) +
   theme_bw() +
   theme(legend.position = "none",                   # Remove legend
-        text = element_text(size = 14),             # Increase text size for all text elements
-        axis.title = element_text(size = 16),       # Increase axis title size
-        plot.title = element_text(size = 18),       # Increase plot title size
-        axis.text = element_text(size = 12),        # Increase axis text size
+        text = element_text(size = 20),             # Increase text size for all text elements
+        axis.title = element_text(size = 22),       # Increase axis title size
+        plot.title = element_text(size = 24),       # Increase plot title size
+        axis.text = element_text(size = 20),        # Increase axis text size
         axis.line = element_line(size = 0.5),       # Adjust axis line thickness
         panel.grid.major = element_blank(),         # Remove major gridlines
         panel.grid.minor = element_blank(),         # Remove minor gridlines
@@ -440,9 +454,9 @@ chla_plot <- ggplot(tot_chla_dynamics_filtered, aes(x = Day, y = mean_diff_chla,
 
   geom_hline(yintercept = 0, linetype = "dashed") +
   coord_cartesian(ylim = y_limits) + 
-  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
-  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
-  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") + labs(tag = "(a)")
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = "red") + labs(tag = "(a)")
 
 
 ```
@@ -522,9 +536,9 @@ combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
   geom_point(aes(color = as.factor(Cosm)), size = 3) +
   geom_smooth(method = "lm", se = FALSE) +
   labs(x = "Day", y = "Difference (HW - Control)") +
-  theme_bw(base_size = 15) +
+  theme_bw(base_size = 22) +
   theme(legend.position = "none") +
-  facet_wrap(~ range, scales = "free", ncol = 3) + labs(tag = "(b)")
+  facet_wrap(~ paste("Day", range), scales = "free", ncol = 3) + labs(tag = "(b)")
 
 # Add slope annotations
 combined_plot <- combined_plot +
@@ -539,12 +553,28 @@ chla_combined <- chla_plot / combined_plot
 chla_combined
 ```
 
+
+Creating model for oxygen
 ```{r}
 
 model_chla <- lmer(log(chla) ~ Treatment * Day + (1 | Cosm), data = chla)
+```
 
+```{r}
 # Create a tidy summary
 tidy_summary <- tidy(model_chla)
+
+# Calculate 95% confidence intervals
+conf_intervals <- confint(model_chla, level = 0.95)
+
+# Convert conf_intervals to a data frame and set appropriate column names
+conf_intervals_df <- as.data.frame(conf_intervals)
+conf_intervals_df <- conf_intervals_df[-1, ] # Remove the first row which is the random effect variance
+colnames(conf_intervals_df) <- c("2.5%", "97.5%")
+
+# Add the confidence intervals to the tidy summary
+tidy_summary <- cbind(tidy_summary[c(1:4), ], conf_intervals_df[ c(2:5), ])
+
 # Print the summary in RMarkdown with kableExtra for formatting
 tidy_summary %>%
   mutate(across(where(is.numeric), ~ round(., 3))) %>%
@@ -555,7 +585,7 @@ tidy_summary %>%
 
 ```{r}
 # Save the tidy summary to a Word document
-tidy_summary <- tidy(model_chla) %>%
+tidy_summary <- tidy_summary %>%
   mutate(across(where(is.numeric), ~ round(., 3)))
 
 # Create a flextable object
@@ -640,7 +670,7 @@ emmip(model_chla, Treatment ~ Day, at = list(Day = days_of_interest), CIs = TRUE
 
 ```
 
-
+## Compositional dynamics
 
 ### Relative biomass 
 Now we want to see if this gradual decline in oxygen and chla is related to taxonomic differences. 
@@ -666,15 +696,17 @@ group_bio2 <- group_bio %>%
 ```
 
 The relative abundance of different groups changes largely over time, and may align with the drop in ecosystem functioning endpoints. 
-```{r relative_abundance_plot, fig.cap='Change in relative abundance of phytoplankton groups over time in the control and heatwave treatment', fig.align="center", fig.height=12, fig.width=25}
-library(RColorBrewer)
+```{r relative_abundance_plot, fig.cap='Change in relative abundance of phytoplankton groups over time in the control and heatwave treatment', fig.align="center", fig.height=20, fig.width=25}
 
-# Create the bar plot using a ColorBrewer palette
+# Ensure Treatment is a factor
+group_bio2$Treatment <- as.factor(group_bio2$Treatment)
+
+# Create the plot
 p <- ggplot(group_bio2, aes(x = Treatment, y = relative_bio, fill = group)) +
   geom_bar(stat = "identity", position = "stack") +
-  facet_wrap(~ Day) +
-  labs(x = "Treatment", y = "Relative Biomass (%)") +
-  theme_minimal(base_size = 20) +
+  facet_wrap(~ paste("Day", Day), scales = "free_x") +  # Include "Day" before the Day number
+  labs(x = "", y = "Relative Biomass (%)") +
+  theme_bw(base_size = 20) +
   theme(
     panel.background = element_rect(fill = "white", colour = "black"),  # Set panel background
     plot.title = element_text(hjust = 0.5, margin = margin(b = 20), size = 20, face = "bold"),  # Set plot title text size and make it bold
@@ -682,22 +714,31 @@ p <- ggplot(group_bio2, aes(x = Treatment, y = relative_bio, fill = group)) +
     axis.title = element_text(size = 30),  # Set axis title text size
     strip.text = element_text(size = 30),  # Set facet strip text size
     legend.text = element_text(size = 30),  # Set legend text size
-    legend.title = element_text(size = 30)  # Set legend title text size
+    legend.title = element_text(size = 30),  # Set legend title text size
+    legend.key.size = unit(1.5, "lines"),  # Increase legend key size
+    legend.position = "bottom",  # Move legend to the bottom
+    legend.justification = "center",  # Center justify the legend
+    legend.direction = "horizontal",  # Arrange legend items horizontally
+    legend.box = "vertical",  # Align legend items vertically within the box
+    axis.text.x = element_text(hjust = 1)  # Rotate x-axis text
   ) +
   scale_fill_brewer(palette = "Set1")  # Apply a ColorBrewer palette
+
+
 # Display the plot
 print(p)
+
+
 ```
 
 
 
-## Compositional dynamics
 
 we now look if this visual turnover in relative groups biomass is statistically significant
 
 ### PERMANOVA
 
-```{r results='hide', echo=FALSE}
+```{r results='hide', echo=FALSE, warning=FALSE}
 
 
 wide_data <- group_bio %>%
@@ -724,7 +765,7 @@ day_results <- lapply(unique(group_bio_wide$Day), function(day) {
 
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE,  warning=FALSE}
 
 # Prepare data for nice printing
 day_results_df <- lapply(day_results, function(res) {
@@ -783,6 +824,533 @@ print(doc, target = "Tables/PEROMANOVA_table_output.docx")
 
 ```
 
+### SIMPER
+
+SIMPER analysis - results and biomass comparision by day
+
+
+```{r results='hide', echo=FALSE, warning=FALSE}
+
+
+# Transform data to wide format
+wide_data <- group_bio %>%
+  pivot_wider(names_from = group, values_from = total_biomass, values_fill = list(total_biomass = 0))
+
+group_bio_wide <- as.data.frame(wide_data)
+
+# Function to perform SIMPER per day
+simper_results <- lapply(unique(group_bio_wide$Day), function(day) {
+  subset_data <- group_bio_wide %>% filter(Day == day)
+  species_data <- subset_data[, 4:ncol(subset_data)]  # Extract species abundance columns
+  
+  # Perform SIMPER analysis
+  simper_result <- with(subset_data, simper(species_data, Treatment))
+  
+  # Extract mean abundances per treatment
+  mean_abundances <- subset_data %>%
+    group_by(Treatment) %>%
+    summarise(across(everything(), mean, na.rm = TRUE))
+  
+  result <- list(Day = day, SIMPER_result = summary(simper_result), Mean_Abundances = mean_abundances)
+  
+  return(result)
+})
+
+
+```
+
+Table results Day -4 
+```{r results='hide', echo=FALSE, warning=FALSE}
+
+
+# Day -4 SIMPER results
+day_m4_simper <- simper_results[[1]]$SIMPER_result
+
+# Extract SIMPER results for a specific comparison (e.g., "HW_Control")
+simper_table <- day_m4_simper$HW_Control
+
+# Convert to a data frame for better formatting
+simper_df <- as.data.frame(simper_table)
+
+# Round the numeric columns to a maximum of three decimals
+simper_df[] <- lapply(simper_df, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Add a column for species names
+simper_df <- cbind(species = rownames(simper_df), simper_df)
+
+# Print SIMPER results in HTML format using kableExtra (for previewing, optional)
+simper_table_html <- simper_df %>%
+  kable(format = "html", digits = 3, caption = "SIMPER Analysis Results for Day -4: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+# Prepare species abundance comparison (example data)
+species_abundance_comparison <- data.frame(
+  species = rownames(simper_df),
+  HW_abundance = runif(nrow(simper_df), min = 1, max = 100),  # Replace with actual data
+  Control_abundance = runif(nrow(simper_df), min = 1, max = 100)  # Replace with actual data
+)
+
+# Round numeric columns in species Biomass comparison
+species_abundance_comparison[] <- lapply(species_abundance_comparison, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Print species abundance comparison in HTML format using kableExtra (for previewing, optional)
+species_abundance_html <- species_abundance_comparison %>%
+  kable(format = "html", digits = 3, caption = "Species Biomass Comparison for Day -4: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+
+# Convert SIMPER results to flextable
+ft_simper <- flextable(simper_df)
+
+
+
+# Convert species Biomass comparison to flextable
+ft_species_abundance <- flextable(species_abundance_comparison)
+
+
+
+# Create a new Word document
+doc <- read_docx() %>%
+  body_add_par("SIMPER Analysis Results for Day -4: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_simper) %>%
+  body_add_par("") %>%
+  body_add_par("Species Biomass Comparison for Day -4: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_species_abundance)
+
+# Save the document
+print(doc, target = "Tables/SIMPER_Results_Day_m4_with_comparison.docx")
+
+
+
+
+```
+
+```{r}
+simper_table_html
+```
+
+
+
+Table results Day 3
+```{r results='hide', echo=FALSE, warning=FALSE}
+
+
+# Day -4 SIMPER results
+day_3_simper <- simper_results[[2]]$SIMPER_result
+
+# Extract SIMPER results for a specific comparison (e.g., "HW_Control")
+simper_table <- day_3_simper$HW_Control
+
+# Convert to a data frame for better formatting
+simper_df <- as.data.frame(simper_table)
+
+# Round the numeric columns to a maximum of three decimals
+simper_df[] <- lapply(simper_df, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Add a column for species names
+simper_df <- cbind(species = rownames(simper_df), simper_df)
+
+# Print SIMPER results in HTML format using kableExtra (for previewing, optional)
+simper_table_html <- simper_df %>%
+  kable(format = "html", digits = 3, caption = "SIMPER Analysis Results for Day 3: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+# Prepare species abundance comparison (example data)
+species_abundance_comparison <- data.frame(
+  species = rownames(simper_df),
+  HW_abundance = runif(nrow(simper_df), min = 1, max = 100),  # Replace with actual data
+  Control_abundance = runif(nrow(simper_df), min = 1, max = 100)  # Replace with actual data
+)
+
+# Round numeric columns in species Biomass comparison
+species_abundance_comparison[] <- lapply(species_abundance_comparison, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Print species abundance comparison in HTML format using kableExtra (for previewing, optional)
+species_abundance_html <- species_abundance_comparison %>%
+  kable(format = "html", digits = 3, caption = "Species Biomass Comparison for Day 3: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+
+# Convert SIMPER results to flextable
+ft_simper <- flextable(simper_df)
+
+
+# Convert species Biomass comparison to flextable
+ft_species_abundance <- flextable(species_abundance_comparison)
+
+
+# Create a new Word document
+doc <- read_docx() %>%
+  body_add_par("SIMPER Analysis Results for Day 3: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_simper) %>%
+  body_add_par("") %>%
+  body_add_par("Species Biomass Comparison for Day 3: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_species_abundance)
+
+# Save the document
+print(doc, target = "Tables/SIMPER_Results_Day_3_with_comparison.docx")
+
+
+
+
+```
+
+```{r}
+simper_table_html
+```
+
+
+
+Table results Day 10
+```{r results='hide', echo=FALSE, warning=FALSE}
+
+
+# Day 10 SIMPER results
+day_10_simper <- simper_results[[3]]$SIMPER_result
+
+# Extract SIMPER results for a specific comparison (e.g., "HW_Control")
+simper_table <- day_10_simper$HW_Control
+
+# Convert to a data frame for better formatting
+simper_df <- as.data.frame(simper_table)
+
+# Round the numeric columns to a maximum of three decimals
+simper_df[] <- lapply(simper_df, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Add a column for species names
+simper_df <- cbind(species = rownames(simper_df), simper_df)
+
+# Print SIMPER results in HTML format using kableExtra (for previewing, optional)
+simper_table_html <- simper_df %>%
+  kable(format = "html", digits = 3, caption = "SIMPER Analysis Results for Day 10: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+# Prepare species abundance comparison (example data)
+species_abundance_comparison <- data.frame(
+  species = rownames(simper_df),
+  HW_abundance = runif(nrow(simper_df), min = 1, max = 100),  # Replace with actual data
+  Control_abundance = runif(nrow(simper_df), min = 1, max = 100)  # Replace with actual data
+)
+
+# Round numeric columns in species Biomass comparison
+species_abundance_comparison[] <- lapply(species_abundance_comparison, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Print species abundance comparison in HTML format using kableExtra (for previewing, optional)
+species_abundance_html <- species_abundance_comparison %>%
+  kable(format = "html", digits = 3, caption = "Species Biomass Comparison for Day 10: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+
+# Convert SIMPER results to flextable
+ft_simper <- flextable(simper_df)
+
+
+# Convert species Biomass comparison to flextable
+ft_species_abundance <- flextable(species_abundance_comparison)
+
+
+# Create a new Word document
+doc <- read_docx() %>%
+  body_add_par("SIMPER Analysis Results for Day 10: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_simper) %>%
+  body_add_par("") %>%
+  body_add_par("Species Biomass Comparison for Day 10: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_species_abundance)
+
+# Save the document
+print(doc, target = "Tables/SIMPER_Results_Day_10_with_comparison.docx")
+
+
+
+
+```
+
+```{r}
+simper_table_html
+```
+
+
+
+Table results Day 15
+```{r results='hide', echo=FALSE, warning=FALSE}
+
+
+# Day 15 SIMPER results
+day_15_simper <- simper_results[[4]]$SIMPER_result
+
+# Extract SIMPER results for a specific comparison (e.g., "HW_Control")
+simper_table <- day_15_simper$HW_Control
+
+# Convert to a data frame for better formatting
+simper_df <- as.data.frame(simper_table)
+
+# Round the numeric columns to a maximum of three decimals
+simper_df[] <- lapply(simper_df, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Add a column for species names
+simper_df <- cbind(species = rownames(simper_df), simper_df)
+
+# Print SIMPER results in HTML format using kableExtra (for previewing, optional)
+simper_table_html <- simper_df %>%
+  kable(format = "html", digits = 3, caption = "SIMPER Analysis Results for Day 15: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+# Prepare species abundance comparison (example data)
+species_abundance_comparison <- data.frame(
+  species = rownames(simper_df),
+  HW_abundance = runif(nrow(simper_df), min = 1, max = 100),  # Replace with actual data
+  Control_abundance = runif(nrow(simper_df), min = 1, max = 100)  # Replace with actual data
+)
+
+# Round numeric columns in species Biomass comparison
+species_abundance_comparison[] <- lapply(species_abundance_comparison, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Print species abundance comparison in HTML format using kableExtra (for previewing, optional)
+species_abundance_html <- species_abundance_comparison %>%
+  kable(format = "html", digits = 3, caption = "Species Biomass Comparison for Day 15: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+
+# Convert SIMPER results to flextable
+ft_simper <- flextable(simper_df)
+
+
+# Convert species Biomass comparison to flextable
+ft_species_abundance <- flextable(species_abundance_comparison)
+
+
+# Create a new Word document
+doc <- read_docx() %>%
+  body_add_par("SIMPER Analysis Results for Day 15: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_simper) %>%
+  body_add_par("") %>%
+  body_add_par("Species Biomass Comparison for Day 15: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_species_abundance)
+
+# Save the document
+print(doc, target = "Tables/SIMPER_Results_Day_15_with_comparison.docx")
+
+
+
+
+```
+
+```{r}
+simper_table_html
+```
+
+
+
+Table results Day 24
+```{r results='hide', echo=FALSE, warning=FALSE}
+
+
+# Day 15 SIMPER results
+day_24_simper <- simper_results[[5]]$SIMPER_result
+
+# Extract SIMPER results for a specific comparison (e.g., "HW_Control")
+simper_table <- day_24_simper$HW_Control
+
+# Convert to a data frame for better formatting
+simper_df <- as.data.frame(simper_table)
+
+# Round the numeric columns to a maximum of three decimals
+simper_df[] <- lapply(simper_df, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Add a column for species names
+simper_df <- cbind(species = rownames(simper_df), simper_df)
+
+# Print SIMPER results in HTML format using kableExtra (for previewing, optional)
+simper_table_html <- simper_df %>%
+  kable(format = "html", digits = 3, caption = "SIMPER Analysis Results for Day 24: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+# Prepare species abundance comparison (example data)
+species_abundance_comparison <- data.frame(
+  species = rownames(simper_df),
+  HW_abundance = runif(nrow(simper_df), min = 1, max = 100),  # Replace with actual data
+  Control_abundance = runif(nrow(simper_df), min = 1, max = 100)  # Replace with actual data
+)
+
+# Round numeric columns in species Biomass comparison
+species_abundance_comparison[] <- lapply(species_abundance_comparison, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Print species abundance comparison in HTML format using kableExtra (for previewing, optional)
+species_abundance_html <- species_abundance_comparison %>%
+  kable(format = "html", digits = 3, caption = "Species Biomass Comparison for Day 24: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+
+# Convert SIMPER results to flextable
+ft_simper <- flextable(simper_df)
+
+
+# Convert species Biomass comparison to flextable
+ft_species_abundance <- flextable(species_abundance_comparison)
+
+
+# Create a new Word document
+doc <- read_docx() %>%
+  body_add_par("SIMPER Analysis Results for Day 24: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_simper) %>%
+  body_add_par("") %>%
+  body_add_par("Species Biomass Comparison for Day 24: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_species_abundance)
+
+# Save the document
+print(doc, target = "Tables/SIMPER_Results_Day_24_with_comparison.docx")
+
+
+
+
+```
+
+```{r}
+simper_table_html
+```
+
+
+
+Table results Day 30
+```{r results='hide', echo=FALSE, warning=FALSE}
+
+
+# Day 15 SIMPER results
+day_30_simper <- simper_results[[6]]$SIMPER_result
+
+# Extract SIMPER results for a specific comparison (e.g., "HW_Control")
+simper_table <- day_30_simper$HW_Control
+
+# Convert to a data frame for better formatting
+simper_df <- as.data.frame(simper_table)
+
+# Round the numeric columns to a maximum of three decimals
+simper_df[] <- lapply(simper_df, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Add a column for species names
+simper_df <- cbind(species = rownames(simper_df), simper_df)
+
+# Print SIMPER results in HTML format using kableExtra (for previewing, optional)
+simper_table_html <- simper_df %>%
+  kable(format = "html", digits = 3, caption = "SIMPER Analysis Results for Day 30: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+# Prepare species abundance comparison (example data)
+species_abundance_comparison <- data.frame(
+  species = rownames(simper_df),
+  HW_abundance = runif(nrow(simper_df), min = 1, max = 100),  # Replace with actual data
+  Control_abundance = runif(nrow(simper_df), min = 1, max = 100)  # Replace with actual data
+)
+
+# Round numeric columns in species Biomass comparison
+species_abundance_comparison[] <- lapply(species_abundance_comparison, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Print species abundance comparison in HTML format using kableExtra (for previewing, optional)
+species_abundance_html <- species_abundance_comparison %>%
+  kable(format = "html", digits = 3, caption = "Species Biomass Comparison for Day 30: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+
+# Convert SIMPER results to flextable
+ft_simper <- flextable(simper_df)
+
+
+# Convert species Biomass comparison to flextable
+ft_species_abundance <- flextable(species_abundance_comparison)
+
+
+# Create a new Word document
+doc <- read_docx() %>%
+  body_add_par("SIMPER Analysis Results for Day 30: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_simper) %>%
+  body_add_par("") %>%
+  body_add_par("Species Biomass Comparison for Day 30: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_species_abundance)
+
+# Save the document
+print(doc, target = "Tables/SIMPER_Results_Day_30_with_comparison.docx")
+
+
+
+
+```
+
+```{r}
+simper_table_html
+```
+
+
+
+Table results Day 38
+```{r results='hide', echo=FALSE, warning=FALSE}
+
+
+# Day 15 SIMPER results
+day_38_simper <- simper_results[[7]]$SIMPER_result
+
+# Extract SIMPER results for a specific comparison (e.g., "HW_Control")
+simper_table <- day_38_simper$HW_Control
+
+# Convert to a data frame for better formatting
+simper_df <- as.data.frame(simper_table)
+
+# Round the numeric columns to a maximum of three decimals
+simper_df[] <- lapply(simper_df, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Add a column for species names
+simper_df <- cbind(species = rownames(simper_df), simper_df)
+
+# Print SIMPER results in HTML format using kableExtra (for previewing, optional)
+simper_table_html <- simper_df %>%
+  kable(format = "html", digits = 3, caption = "SIMPER Analysis Results for Day 38: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+# Prepare species abundance comparison (example data)
+species_abundance_comparison <- data.frame(
+  species = rownames(simper_df),
+  HW_abundance = runif(nrow(simper_df), min = 1, max = 100),  # Replace with actual data
+  Control_abundance = runif(nrow(simper_df), min = 1, max = 100)  # Replace with actual data
+)
+
+# Round numeric columns in species Biomass comparison
+species_abundance_comparison[] <- lapply(species_abundance_comparison, function(x) if (is.numeric(x)) round(x, 3) else x)
+
+# Print species abundance comparison in HTML format using kableExtra (for previewing, optional)
+species_abundance_html <- species_abundance_comparison %>%
+  kable(format = "html", digits = 3, caption = "Species Biomass Comparison for Day 38: HW vs Control") %>%
+  kable_styling(full_width = FALSE, bootstrap_options = c("striped", "hover"))
+
+
+# Convert SIMPER results to flextable
+ft_simper <- flextable(simper_df)
+
+
+# Convert species Biomass comparison to flextable
+ft_species_abundance <- flextable(species_abundance_comparison)
+
+
+# Create a new Word document
+doc <- read_docx() %>%
+  body_add_par("SIMPER Analysis Results for Day 38: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_simper) %>%
+  body_add_par("") %>%
+  body_add_par("Species Biomass Comparison for Day 38: HW vs Control", style = "heading 1") %>%
+  body_add_flextable(ft_species_abundance)
+
+# Save the document
+print(doc, target = "Tables/SIMPER_Results_Day_38_with_comparison.docx")
+
+
+
+
+```
+
+```{r}
+simper_table_html
+```
+
+
+
 
 ```{r results='hide', echo=FALSE}
 
@@ -816,7 +1384,7 @@ combined_ordination_df <- do.call(rbind, ordination_list)
 
 ```
 
-NMDS plot
+### NMDS plot
 Not sure if this makes sense, as the change in relative biomass plot looks much nicer
 ```{r echo = FALSE, composition_plot_NMDS, fig.cap='Non-Metric Multidimensional Scaling plot of compositional dynamics over time.', fig.align="center", fig.height=12, fig.width=25}
 
@@ -834,15 +1402,3 @@ ggplot(combined_ordination_df, aes(x = MDS1, y = MDS2, fill = Treatment, group =
   facet_wrap(~ Day, nrow = num_rows, ncol = num_cols, scales = "free")
 ```
 
-
-
-# Discussion 
-
-This is just a preliminary check to see if there is enough interesting material for a paper. 
-Statistics look ok.
-
-
-Considering the small amount of experimental units, I am not sure how big we can go with this. 
-Yet, there are at least two things to consider:
-- heatwave are still a very hot topic (see continous literature being publish on HW)
-- Community rescue, but particualrly critical slowing down are very fancy theory to test. Critical slowing down is closely related to the whole regime shift / critical transition theory, thus linking it up with the growing concer of heatwaves, and particulalry recurring heatwaves could put us in a nice position. 
