@@ -70,25 +70,9 @@ Here we test whether a semi-natural phytoplankton community undergoing repeated 
 ## Water temperature time series
 ```{r temperature_plot, fig.cap='Water temperature dynamics over time.', fig.align="center", fig.height=6, fig.width=10}
 
-Ambient<- read_excel("data/Ambient_HoboLogger1.xlsx")
-
-HW<- read_excel("data/Heatwave_HoboLogger3.xlsx")
-
-# Convert datetime columns to POSIXct if they are not already
-Ambient$`Date Time, GMT +0200` <- ymd_hms(Ambient$`Date Time, GMT +0200`)
-HW$`Date Time` <- ymd_hms(HW$`Date Time`)
-
-# Add a treatment column to each dataset
-Ambient <- Ambient %>%
-  rename(DateTime = `Date Time, GMT +0200`, Temp = `Temp, °C`, Intensity = `Intensity,  lux`) %>%
-  mutate(Treatment = "Ambient")
-
-HW <- HW %>%
-  rename(DateTime = `Date Time`, Temp = `Temp, °C`, Intensity = `Intensity,  lux`) %>%
-  mutate(Treatment = "HW")
 
 # Combine the datasets
-combined_data <- bind_rows(Ambient, HW)
+combined_data<- read.csv("data/hobo_recordings.csv")
 
 
 ## Plot only data relevant for the experiment
@@ -96,17 +80,16 @@ filtered_combined_data <- combined_data %>%
   filter(DateTime <= as.POSIXct("2021-06-15 23:59:59"))
 
 
-# Plot temperature over time
-temperature_plot <- ggplot(filtered_combined_data, aes(x = DateTime, y = Temp, color = Treatment)) +
+# Plot temperature over time with explicit grouping by Treatment
+temperature_plot <- ggplot(filtered_combined_data, aes(x = DateTime, y = Temp, color = Treatment, group = Treatment)) +
   geom_line(size = 1) +
   labs(title = "",
        x = "Date",
        y = "Temperature (°C)",
        color = "Treatment") +
-  theme_bw(base_size = 20) +
+  theme_bw(base_size = 20) +  # White background theme
+  scale_color_viridis_d(option = "C", end = 0.8) +
   theme(
-    panel.grid.major = element_line(color = "gray", linetype = "dashed"),
-    panel.grid.minor = element_blank(),
     plot.title = element_text(hjust = 0.5, size = 24, face = "bold"),
     axis.title.x = element_text(size = 22, face = "bold"),
     axis.title.y = element_text(size = 22, face = "bold"),
@@ -114,12 +97,9 @@ temperature_plot <- ggplot(filtered_combined_data, aes(x = DateTime, y = Temp, c
     legend.position = "top",
     legend.title = element_text(size = 20, face = "bold"),
     legend.text = element_text(size = 18)
-  ) +
-  scale_color_viridis_d(option = "C", end = 0.8)  # Using viridis color palette
-filtered_combined_data %>% filter(Treatment == "Ambient") %>% summarise(min(Temp))
-filtered_combined_data %>% filter(Treatment == "HW") %>% summarise(max(Temp))
+  )
 
-# Print the plot
+# Display the plot
 print(temperature_plot)
 
 ```
@@ -190,7 +170,7 @@ ox_plot <- ggplot(tot_ox_dynamics_filtered, aes(x = Day, y = mean_diff_ox, color
   annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = "red") + labs(tag = "(a)")
 
 ```
-Oxygen, again, shows an impaired recovery after the third heatwave. The contrast with the first two heatwave is striking. Indeed, the first two heatwaves determined a decline in DO only while happening, with DO quickly returning to levels higher than the control. The third heatwave strongly decreased DO during its course, and slowed down its recovery in the post HW phase so that it never got back to control levels.
+Oxygen shows an impaired recovery after the third heatwave. The contrast with the first two heatwave is striking. Indeed, the first two heatwaves determined a decline in DO only while happening, with DO quickly returning to levels higher than the control. The third heatwave strongly decreased DO during its course, and slowed down its recovery in the post HW phase so that it never got back to control levels.
 ```{r oxygen_plot, fig.cap='Dissolved oxygen dynamics over time. The red areas show the three heatwaves. The figure shows the difference in DO between mesocosm undergoing the HWs treatment and the control (dashed line at zero).', fig.align="center", fig.height=6, fig.width=10}
 
  ox_plot
@@ -198,6 +178,7 @@ Oxygen, again, shows an impaired recovery after the third heatwave. The contrast
 
 We now look specifically at how the slope of recovery changes after each HW. To do that we look at the slope of the linear regression between two subsequent time points (during and after a HW) of the difference between DO in control and HW mesocosms.
 ```{r oxygen_slopes, fig.cap='Change in the slope of the linear regression connecting two subsequent time point ((during and after a HW) of the difference between DO in control and HW mesocosms.', fig.align="center", fig.height=6, fig.width=10}
+
 # Calculate mean ox for Control by day
 control_bm <- ox %>% 
   filter(Treatment == "Control") %>%
@@ -223,21 +204,18 @@ ox_merged <- ox_merged %>%
 # Filter HW data
 hw_data <- ox_merged %>% filter(Treatment == "HW")
 
-# Define day ranges
-day_ranges <- list(c(3, 10), c(15, 24), c(30, 38))
-
 # Add a range column to hw_data with the correct order
 hw_data <- hw_data %>% 
   mutate(range = case_when(
-    Day >= 3 & Day <= 10 ~ "3-10",
-    Day >= 15 & Day <= 24 ~ "15-24",
-    Day >= 30 & Day <= 38 ~ "30-38",
+    Day >= 3 & Day <= 10 ~ "3 - 10",
+    Day >= 15 & Day <= 24 ~ "15 - 24",
+    Day >= 30 & Day <= 38 ~ "30 - 38",
     TRUE ~ NA_character_
   )) %>%
   filter(!is.na(range))
 
 # Set the order of the range levels
-hw_data$range <- factor(hw_data$range, levels = c("3-10", "15-24", "30-38"))
+hw_data$range <- factor(hw_data$range, levels = c("3 - 10", "15 - 24", "30 - 38"))
 
 # Function to fit linear model
 fit_lm <- function(data) {
@@ -264,16 +242,19 @@ combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
   labs(x = "Day", y = "Difference (HW - Control)") +
   theme_bw(base_size = 22) +
   theme(legend.position = "none") +
-  facet_wrap(~ paste("Day", range), scales = "free", ncol = 3) + labs(tag = "(b)")
+  facet_wrap(~ range, scales = "free", ncol = 3) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 5)) +  # Ensures integer breaks on x-axis
+  labs(tag = "(b)")
 
 # Add slope annotations
 combined_plot <- combined_plot +
   geom_text(data = slopes, aes(x = Inf, y = Inf, label = paste0("Slope: ", round(slope, 3))), 
-            hjust = 1.5, vjust = 1.2, size = 5)
+            hjust = 1.5, vjust = 1.2, size = 4)
 
 print(combined_plot)
 ```
 
+Summary plot for the manuscript
 
 ```{r oxy_combined, fig.cap='combined plot for manuscript', fig.align="center", fig.height=10, fig.width=12}
 
@@ -282,7 +263,7 @@ oxy_combined
 ```
 
 Creating model for oxygen
-```{r}
+```{r echo=TRUE, include=TRUE}
 
 model_ox <- lmer(log(ox) ~ Treatment * Day + (1 | Cosm), data = ox)
 ```
@@ -472,6 +453,7 @@ Chlorophyll - a shows probably the most dramatic response. There is not much cha
 
 We now look specifically at how the slope of recovery changes after each HW. To do that we look at the slope of the linear regression between two subsequent time points (during and after a HW) of the difference between chlorophyll - a concentration in control and HW mesocosms.
 ```{r chla_slopes, fig.cap='Change in the slope of the linear regression connecting two subsequent time point (during and after a HW) of the difference between chlorophyll - a concentration in control and HW mesocosms.', fig.align="center", fig.height=6, fig.width=10}
+
 # Calculate mean chla for Control by day
 control_bm <- chla %>% 
   filter(Treatment == "Control") %>%
@@ -503,15 +485,15 @@ day_ranges <- list(c(3, 10), c(15, 24), c(30, 38))
 # Add a range column to hw_data with the correct order
 hw_data <- hw_data %>% 
   mutate(range = case_when(
-    Day >= 3 & Day <= 10 ~ "3-10",
-    Day >= 15 & Day <= 24 ~ "15-24",
-    Day >= 30 & Day <= 38 ~ "30-38",
+    Day >= 3 & Day <= 10 ~ "3 - 10",
+    Day >= 15 & Day <= 24 ~ "15 - 24",
+    Day >= 30 & Day <= 38 ~ "30 - 38",
     TRUE ~ NA_character_
   )) %>%
   filter(!is.na(range))
 
 # Set the order of the range levels
-hw_data$range <- factor(hw_data$range, levels = c("3-10", "15-24", "30-38"))
+hw_data$range <- factor(hw_data$range, levels = c("3 - 10", "15 - 24", "30 - 38"))
 
 # Function to fit linear model
 fit_lm <- function(data) {
@@ -538,7 +520,8 @@ combined_plot <- ggplot(hw_data, aes(x = Day, y = diff)) +
   labs(x = "Day", y = "Difference (HW - Control)") +
   theme_bw(base_size = 22) +
   theme(legend.position = "none") +
-  facet_wrap(~ paste("Day", range), scales = "free", ncol = 3) + labs(tag = "(b)")
+  facet_wrap(~ range, scales = "free", ncol = 3) + 
+  labs(tag = "(b)")
 
 # Add slope annotations
 combined_plot <- combined_plot +
@@ -547,15 +530,15 @@ combined_plot <- combined_plot +
 
 print(combined_plot)
 ```
-
+Summary plot for the manuscript
 ```{r chla_combined, fig.cap='combined plot for manuscript', fig.align="center", fig.height=10, fig.width=12}
 chla_combined <- chla_plot / combined_plot
 chla_combined
 ```
 
 
-Creating model for oxygen
-```{r}
+Creating model for chla
+```{r echo=TRUE, include=TRUE}
 
 model_chla <- lmer(log(chla) ~ Treatment * Day + (1 | Cosm), data = chla)
 ```
@@ -681,8 +664,7 @@ Let's have a look at how different taxonomic groups of phytoplankton change over
 ```{r results='hide', echo = FALSE, warning=FALSE}
 # load group data
 
- group_bio <- read.csv("data/group_bio.csv")
-
+group_bio <- read.csv("data/group_bio.csv")
 
 # Calculate relative abundance
 group_bio2 <- group_bio %>%
@@ -826,7 +808,7 @@ print(doc, target = "Tables/PEROMANOVA_table_output.docx")
 
 ### SIMPER
 
-SIMPER analysis - results and biomass comparision by day
+SIMPER analysis - results and biomass comparison by day
 
 
 ```{r results='hide', echo=FALSE, warning=FALSE}
