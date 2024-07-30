@@ -1,3 +1,0 @@
-"0","# Visualization "
-"0","emmip(model_abu, Treatment ~ Day, at = list(Day = days_of_interest), CIs = TRUE)"
-"0",""
