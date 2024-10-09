@@ -1,7 +1,7 @@
 ---
 title: "Slowing down in recovery of phytoplankton community due to recurrent heatwaves"
 author: "Francesco Polazzo"
-date: "25 July, 2024"
+date: "01 October, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -453,13 +453,207 @@ Visualization of model prediction (linear trend)
 
 ## Compositional dynamics
 
+
+
+
+### Total phytoplankton biomass dynamics
+
+
+<div class="figure" style="text-align: center">
+<img src="Slowing_down_v2_files/figure-html/phyto_bio_plot-1.png" alt="Phytoplankton biomass dynamics over time. The red areas show the three heatwaves"  />
+<p class="caption">(\#fig:phyto_bio_plot)Phytoplankton biomass dynamics over time. The red areas show the three heatwaves</p>
+</div>
+
+We now look specifically at how the slope of recovery changes after each HW. To do that we look at the slope of the linear regression between two subsequent time points (during and after a HW) of the difference between phytoplankton biomass in HW mesocosms and controls .
+<div class="figure" style="text-align: center">
+<img src="Slowing_down_v2_files/figure-html/phyto_bio_slopes-1.png" alt="Change in the slope of the linear regression connecting two subsequent time point (during and after a HW) of the difference between phytoplankton biomass in HW and control mesocosms."  />
+<p class="caption">(\#fig:phyto_bio_slopes)Change in the slope of the linear regression connecting two subsequent time point (during and after a HW) of the difference between phytoplankton biomass in HW and control mesocosms.</p>
+</div>
+
+
+
+
+Creating model for phyto biomass
+
+``` r
+model_phyto_bio <- lmer(log(total) ~ Treatment * Day + (1 | Sample), data = try)
+```
+
+<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> effect </th>
+   <th style="text-align:left;"> group </th>
+   <th style="text-align:left;"> term </th>
+   <th style="text-align:right;"> estimate </th>
+   <th style="text-align:right;"> std.error </th>
+   <th style="text-align:right;"> statistic </th>
+   <th style="text-align:right;"> df </th>
+   <th style="text-align:right;"> p.value </th>
+   <th style="text-align:right;"> 2.5% </th>
+   <th style="text-align:right;"> 97.5% </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:left;"> fixed </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:right;"> 0.891 </td>
+   <td style="text-align:right;"> 0.051 </td>
+   <td style="text-align:right;"> 17.457 </td>
+   <td style="text-align:right;"> 52 </td>
+   <td style="text-align:right;"> 0.000 </td>
+   <td style="text-align:right;"> 0.793 </td>
+   <td style="text-align:right;"> 0.989 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> TreatmentHW </td>
+   <td style="text-align:left;"> fixed </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> TreatmentHW </td>
+   <td style="text-align:right;"> -0.103 </td>
+   <td style="text-align:right;"> 0.072 </td>
+   <td style="text-align:right;"> -1.432 </td>
+   <td style="text-align:right;"> 52 </td>
+   <td style="text-align:right;"> 0.158 </td>
+   <td style="text-align:right;"> -0.242 </td>
+   <td style="text-align:right;"> 0.035 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Day </td>
+   <td style="text-align:left;"> fixed </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> Day </td>
+   <td style="text-align:right;"> 0.001 </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.255 </td>
+   <td style="text-align:right;"> 52 </td>
+   <td style="text-align:right;"> 0.800 </td>
+   <td style="text-align:right;"> -0.004 </td>
+   <td style="text-align:right;"> 0.005 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> TreatmentHW:Day </td>
+   <td style="text-align:left;"> fixed </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> TreatmentHW:Day </td>
+   <td style="text-align:right;"> -0.006 </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> -1.664 </td>
+   <td style="text-align:right;"> 52 </td>
+   <td style="text-align:right;"> 0.102 </td>
+   <td style="text-align:right;"> -0.012 </td>
+   <td style="text-align:right;"> 0.001 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+
+
+Model diagnostics
+<div class="figure" style="text-align: center">
+<img src="Slowing_down_v2_files/figure-html/check_phyto_bio_model-1.png" alt="Checking assumption for chlorophyll - a model"  />
+<p class="caption">(\#fig:check_phyto_bio_model)Checking assumption for chlorophyll - a model</p>
+</div>
+Not too bad, but homogeneity of variance a bit messy. Consider transformation.
+
+
+Post - hoc analysis. Let see when the HW treatment had a significant impact on phyto abundance
+<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> contrast </th>
+   <th style="text-align:right;"> Day </th>
+   <th style="text-align:right;"> estimate </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> df </th>
+   <th style="text-align:right;"> t.ratio </th>
+   <th style="text-align:right;"> p.value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Control - HW </td>
+   <td style="text-align:right;"> -4 </td>
+   <td style="text-align:right;"> 0.081 </td>
+   <td style="text-align:right;"> 0.083 </td>
+   <td style="text-align:right;"> 37.643 </td>
+   <td style="text-align:right;"> 0.979 </td>
+   <td style="text-align:right;"> 0.334 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Control - HW </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0.120 </td>
+   <td style="text-align:right;"> 0.065 </td>
+   <td style="text-align:right;"> 20.521 </td>
+   <td style="text-align:right;"> 1.851 </td>
+   <td style="text-align:right;"> 0.079 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Control - HW </td>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:right;"> 0.159 </td>
+   <td style="text-align:right;"> 0.051 </td>
+   <td style="text-align:right;"> 8.935 </td>
+   <td style="text-align:right;"> 3.099 </td>
+   <td style="text-align:right;font-weight: bold;"> 0.013 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Control - HW </td>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:right;"> 0.187 </td>
+   <td style="text-align:right;"> 0.047 </td>
+   <td style="text-align:right;"> 6.155 </td>
+   <td style="text-align:right;"> 4.003 </td>
+   <td style="text-align:right;font-weight: bold;"> 0.007 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Control - HW </td>
+   <td style="text-align:right;"> 24 </td>
+   <td style="text-align:right;"> 0.237 </td>
+   <td style="text-align:right;"> 0.053 </td>
+   <td style="text-align:right;"> 9.827 </td>
+   <td style="text-align:right;"> 4.503 </td>
+   <td style="text-align:right;font-weight: bold;"> 0.001 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Control - HW </td>
+   <td style="text-align:right;"> 30 </td>
+   <td style="text-align:right;"> 0.270 </td>
+   <td style="text-align:right;"> 0.064 </td>
+   <td style="text-align:right;"> 20.192 </td>
+   <td style="text-align:right;"> 4.187 </td>
+   <td style="text-align:right;font-weight: bold;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;font-weight: bold;"> Control - HW </td>
+   <td style="text-align:right;"> 38 </td>
+   <td style="text-align:right;"> 0.314 </td>
+   <td style="text-align:right;"> 0.085 </td>
+   <td style="text-align:right;"> 39.467 </td>
+   <td style="text-align:right;"> 3.689 </td>
+   <td style="text-align:right;font-weight: bold;"> 0.001 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+
+
+
 ### Relative biomass 
 Now we want to see if this gradual decline in oxygen and chla is related to taxonomic differences. 
 We start looking at the relative biomass of different phytoplankton group over time
 
 
 Let's have a look at how different taxonomic groups of phytoplankton change over time in terms of relative biomass 
-
 
 The relative abundance of different groups changes largely over time, and may align with the drop in ecosystem functioning endpoints. 
 <div class="figure" style="text-align: center">
@@ -546,7 +740,7 @@ Table results Day -4
 
 
 <table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>(\#tab:unnamed-chunk-22)SIMPER Analysis Results for Day -4: HW vs Control</caption>
+<caption>(\#tab:unnamed-chunk-28)SIMPER Analysis Results for Day -4: HW vs Control</caption>
  <thead>
   <tr>
    <th style="text-align:left;">   </th>
@@ -658,7 +852,7 @@ Table results Day 3
 
 
 <table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>(\#tab:unnamed-chunk-24)SIMPER Analysis Results for Day 3: HW vs Control</caption>
+<caption>(\#tab:unnamed-chunk-30)SIMPER Analysis Results for Day 3: HW vs Control</caption>
  <thead>
   <tr>
    <th style="text-align:left;">   </th>
@@ -770,7 +964,7 @@ Table results Day 10
 
 
 <table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>(\#tab:unnamed-chunk-26)SIMPER Analysis Results for Day 10: HW vs Control</caption>
+<caption>(\#tab:unnamed-chunk-32)SIMPER Analysis Results for Day 10: HW vs Control</caption>
  <thead>
   <tr>
    <th style="text-align:left;">   </th>
@@ -882,7 +1076,7 @@ Table results Day 15
 
 
 <table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>(\#tab:unnamed-chunk-28)SIMPER Analysis Results for Day 15: HW vs Control</caption>
+<caption>(\#tab:unnamed-chunk-34)SIMPER Analysis Results for Day 15: HW vs Control</caption>
  <thead>
   <tr>
    <th style="text-align:left;">   </th>
@@ -994,7 +1188,7 @@ Table results Day 24
 
 
 <table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>(\#tab:unnamed-chunk-30)SIMPER Analysis Results for Day 24: HW vs Control</caption>
+<caption>(\#tab:unnamed-chunk-36)SIMPER Analysis Results for Day 24: HW vs Control</caption>
  <thead>
   <tr>
    <th style="text-align:left;">   </th>
@@ -1106,7 +1300,7 @@ Table results Day 30
 
 
 <table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>(\#tab:unnamed-chunk-32)SIMPER Analysis Results for Day 30: HW vs Control</caption>
+<caption>(\#tab:unnamed-chunk-38)SIMPER Analysis Results for Day 30: HW vs Control</caption>
  <thead>
   <tr>
    <th style="text-align:left;">   </th>
@@ -1218,7 +1412,7 @@ Table results Day 38
 
 
 <table class="table table-striped table-hover" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>(\#tab:unnamed-chunk-34)SIMPER Analysis Results for Day 38: HW vs Control</caption>
+<caption>(\#tab:unnamed-chunk-40)SIMPER Analysis Results for Day 38: HW vs Control</caption>
  <thead>
   <tr>
    <th style="text-align:left;">   </th>
@@ -1335,4 +1529,117 @@ Not sure if this makes sense, as the change in relative biomass plot looks much 
 <img src="Slowing_down_v2_files/figure-html/composition_plot_NMDS-1.png" alt="Non-Metric Multidimensional Scaling plot of compositional dynamics over time."  />
 <p class="caption">(\#fig:composition_plot_NMDS)Non-Metric Multidimensional Scaling plot of compositional dynamics over time.</p>
 </div>
+
+
+
+## Zooplankton
+
+<div class="figure" style="text-align: center">
+<img src="Slowing_down_v2_files/figure-html/bio_plot_zoo-1.png" alt="Zooplankton biomass dynamics over time. The red areas show the three heatwaves"  />
+<p class="caption">(\#fig:bio_plot_zoo)Zooplankton biomass dynamics over time. The red areas show the three heatwaves</p>
+</div>
+
+Creating model for zoo biomass
+
+``` r
+dd_zoo_model <- dd_zoo_long %>% 
+  group_by(Mesocosm.No, Treatment, Day) %>%
+  summarize(total = sum(biomass)) %>%
+  ungroup()
+model_zoo_bio <- lmer(log10(total +1) ~ Treatment * Day + (1 | Mesocosm.No), data = dd_zoo_model)
+```
+
+<table class="table" style="color: black; width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;">   </th>
+   <th style="text-align:left;"> effect </th>
+   <th style="text-align:left;"> group </th>
+   <th style="text-align:left;"> term </th>
+   <th style="text-align:right;"> estimate </th>
+   <th style="text-align:right;"> std.error </th>
+   <th style="text-align:right;"> statistic </th>
+   <th style="text-align:right;"> df </th>
+   <th style="text-align:right;"> p.value </th>
+   <th style="text-align:right;"> 2.5% </th>
+   <th style="text-align:right;"> 97.5% </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:left;"> fixed </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> (Intercept) </td>
+   <td style="text-align:right;"> 0.142 </td>
+   <td style="text-align:right;"> 0.048 </td>
+   <td style="text-align:right;"> 2.928 </td>
+   <td style="text-align:right;"> 28 </td>
+   <td style="text-align:right;"> 0.007 </td>
+   <td style="text-align:right;"> 0.050 </td>
+   <td style="text-align:right;"> 0.234 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> TreatmentHW </td>
+   <td style="text-align:left;"> fixed </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> TreatmentHW </td>
+   <td style="text-align:right;"> -0.029 </td>
+   <td style="text-align:right;"> 0.069 </td>
+   <td style="text-align:right;"> -0.419 </td>
+   <td style="text-align:right;"> 28 </td>
+   <td style="text-align:right;"> 0.678 </td>
+   <td style="text-align:right;"> -0.158 </td>
+   <td style="text-align:right;"> 0.101 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Day </td>
+   <td style="text-align:left;"> fixed </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> Day </td>
+   <td style="text-align:right;"> 0.006 </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 2.859 </td>
+   <td style="text-align:right;"> 28 </td>
+   <td style="text-align:right;"> 0.008 </td>
+   <td style="text-align:right;"> 0.002 </td>
+   <td style="text-align:right;"> 0.010 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> TreatmentHW:Day </td>
+   <td style="text-align:left;"> fixed </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> TreatmentHW:Day </td>
+   <td style="text-align:right;"> 0.001 </td>
+   <td style="text-align:right;"> 0.003 </td>
+   <td style="text-align:right;"> 0.235 </td>
+   <td style="text-align:right;"> 28 </td>
+   <td style="text-align:right;"> 0.816 </td>
+   <td style="text-align:right;"> -0.005 </td>
+   <td style="text-align:right;"> 0.006 </td>
+  </tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+### Relative biomass 
+
+Let's have a look at how different taxonomic groups of zooplankton change over time in terms of relative biomass 
+
+<div class="figure" style="text-align: center">
+<img src="Slowing_down_v2_files/figure-html/relative_bio_zoo_plot-1.png" alt="Change in relative biomass of zooplankton groups over time in the control and heatwave treatment"  />
+<p class="caption">(\#fig:relative_bio_zoo_plot)Change in relative biomass of zooplankton groups over time in the control and heatwave treatment</p>
+</div>
+
+
+
+![](Slowing_down_v2_files/figure-html/unnamed-chunk-47-1.png)<!-- -->
 
