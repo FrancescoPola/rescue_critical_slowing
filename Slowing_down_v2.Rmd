@@ -1804,8 +1804,9 @@ dd_zoo_long <- dd_zoo_long %>%
   mutate(group = case_when(
     taxa %in% c("Simocephalus", "Chydorus", "Daphnia.longispina", "Alona", "Alonella", "Ceriodaphnia") ~ "Cladocerans",
     taxa %in% c("Cyclopoida", "Calanoida", "Nauplii") ~ "Copepods",
-    taxa == "Ostracoda" ~ "Ostracoda",
     TRUE ~ "Rotifers"  # For all other taxa
+    taxa == "Ostracoda" ~ "Ostracoda"
+    
   ))
 
 # Calculate relative abundance
