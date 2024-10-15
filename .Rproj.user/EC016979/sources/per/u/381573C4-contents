@@ -1,0 +1,592 @@
+
+library(scales)
+#### Phyto complete biomass ####
+
+dd <- read_excel("data/abundance_collapse_cosm.xlsx")
+names(dd)
+
+
+tot.bio <- dd[, c(1:5)]
+tot.bio<-as.data.frame(tot.bio) 
+tot.bio <- group_bio %>%
+  group_by(Day, Treatment) %>%
+  mutate(total.bio = sum(total_biomass, na.rm = TRUE)) %>%
+  ungroup()
+unique(tot.bio$Day)
+### Log10 abundance
+tot.bio$tot.bio_log <- log10(tot.bio$total.bio+1)
+str(group_bio)
+
+# Function to calculate standard error
+se <- function(x) sqrt(var(x, na.rm = TRUE) / length(na.omit(x)))
+
+
+try <- group_bio2[, -c(6,7)] %>% group_by(Sample, Treatment, Day) %>% summarize(total = sum(total_biomass)) %>% ungroup() 
+try <- try %>% mutate(bio_log = log10(total))
+# Calculate mean abundance and standard error for Control
+control_mean <- try %>% filter(Treatment == "Control") %>%
+  group_by(Day) %>%
+  summarize(control_mean_bio = mean(bio_log, na.rm = TRUE))
+
+# Calculate differences from Control for each treatment
+tot.bio_diff <- try %>%
+  left_join(control_mean, by = "Day") %>%
+  mutate(diff_bio = bio_log - control_mean_bio)
+
+# Summarize the data for plotting
+tot_bio_dynamics <- tot.bio_diff %>%
+  group_by(Treatment, Day) %>%
+  summarize(mean_diff_bio = mean(diff_bio, na.rm = TRUE), se = se(diff_bio)) %>%
+  mutate(lower_y = mean_diff_bio - se, upper_y = mean_diff_bio + se)
+
+# Determine the y-axis limits to ensure alignment of zero line
+y_limits <- range(tot_bio_dynamics$mean_diff_bio + tot_bio_dynamics$se, 
+                  tot_bio_dynamics$mean_diff_bio - tot_bio_dynamics$se)
+
+# Filter out the control treatment for the plot
+tot_bio_dynamics_filtered <- tot_bio_dynamics
+
+tot_bio_dynamics_filtered <- tot_bio_dynamics_filtered %>% filter(Treatment != "Control")
+# Plot the data with faceting and aligned y-axis
+bio_plot <- ggplot(tot_bio_dynamics_filtered, aes(x = Day, y = mean_diff_bio, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab("Phytoplankton \nDifference in biomass (ind/mesocosm)") +
+  xlab("Day") +
+  viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  viridis::scale_fill_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  theme(legend.position = "top") +
+  theme_bw() +
+  guides(fill = guide_legend(override.aes = list(size = 8), ncol = 6)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_cartesian(ylim = y_limits) + 
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  theme(legend.position = "none")
+
+bio_plot
+
+
+biomass_plot <- ggplot(tot_bio_dynamics_filtered, aes(x = Day, y = mean_diff_bio, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_point()+
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab("Phytoplankton \nDifference in biomass (g/mesocosm)") +
+  xlab("Day") +
+  viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  viridis::scale_fill_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  scale_x_continuous(limits = c(-5, 80)) +
+  theme(legend.position = "top") +
+  theme_bw() +
+  guides(fill = guide_legend(override.aes = list(size = 8), ncol = 6)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~ Treatment, scales = "fixed") + 
+  coord_cartesian(ylim = y_limits) +  # Set the y-axis limits to align the zero line
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red")+
+  theme(legend.position = "none")
+
+
+
+
+
+
+
+# select control as reference 
+control_bc <- tot.bio %>% 
+  filter(Treatment == "Control") %>%
+  group_by(Day) %>% 
+  dplyr::summarize(mean_bc_control = mean(tot.bio_log, na.rm = T))
+# select all other treatments
+bc_all_treat <- tot.bio %>% 
+  group_by(Day, Mesocosm.No, Treatment, Long.treatment) %>% 
+  dplyr::summarize(mean_bc = mean(tot.bio_log, na.rm = T))
+
+bc_data_phyto <- merge(bc_all_treat, control_bc, by = "Day")
+
+
+# resistance defined as the difference between stressed and control divided by the control (i.e. Pennekamp et al 2018)
+bc_data_phyto <- bc_data_phyto %>% filter(Treatment != "Long")
+bc_resist_10 <-  bc_data_phyto %>% 
+  dplyr::filter(Day == 10) 
+bc_resist_10 <- bc_resist_10 %>% 
+  mutate(resist= ((bc_resist_10$mean_bc-bc_resist_10$mean_bc_control)/bc_resist_10$mean_bc_control))
+
+
+# plot resistance
+Y_min<-min(c(bc_resist_10$resist),na.rm = T)-0.001
+Y_max<-max(c(bc_resist_10$resist),na.rm = T)+0.001
+
+
+# Since resistence was calculated in relation to the control, we are going to exculde the controls,
+# but we put a line with y = 0 which is the benchmark for control values
+plot_resistance_10 <- bc_resist_10
+
+
+
+
+
+bc_resist_24 <-  bc_data_phyto %>% 
+  dplyr::filter(Day == 24) 
+bc_resist_24 <- bc_resist_24 %>% 
+  mutate(resist= ((bc_resist_24$mean_bc-bc_resist_24$mean_bc_control)/bc_resist_24$mean_bc_control))
+
+
+
+# Since resistence was calculated in relation to the control, we are going to exculde the controls,
+# but we put a line with y = 0 which is the benchmark for control values
+plot_resistance_24 <- bc_resist_24
+
+
+
+
+
+
+bc_resist_38 <-  bc_data_phyto %>% 
+  dplyr::filter(Day == 38) 
+bc_resist_38 <- bc_resist_38 %>% 
+  mutate(resist= ((bc_resist_38$mean_bc-bc_resist_38$mean_bc_control)/bc_resist_38$mean_bc_control))
+
+
+
+
+# Since resistence was calculated in relation to the control, we are going to exculde the controls,
+# but we put a line with y = 0 which is the benchmark for control values
+plot_resistance_38 <- bc_resist_38
+
+
+plot_resitance <- rbind(bc_resist_10, bc_resist_24, bc_resist_38)
+# plot resistance
+Y_min<-min(c(plot_resitance$resist),na.rm = T)-0.001
+Y_max<-max(c(plot_resitance$resist),na.rm = T)+0.001
+
+ggplot(data = plot_resitance,
+       mapping = aes(x = Treatment, y = resist, fill = Treatment)) +
+  ylab("Compositional Difference") + 
+  xlab("") + 
+  theme_bw() +
+  facet_wrap(~ Day, scales = "fixed") + 
+  theme(text = element_text(size = 16), 
+        axis.text = element_text(colour = "black"),
+        strip.background = element_blank(),
+        legend.position = "bottom") + 
+  geom_point(position = position_jitter(width = 0.35), size = 2, show.legend = FALSE) + 
+  geom_boxplot(alpha = 0.6) +
+  geom_abline(intercept=0, slope=0, linetype="dashed") + 
+  scale_shape_manual(values = c(16,17), guide=FALSE) +
+  scale_fill_viridis_d(end = 0.8, begin = 0.1, option = "magma", guide=FALSE) + 
+  scale_y_continuous(limits = c(Y_min, Y_max), breaks = pretty_breaks(n = 7))
+
+
+
+# Plotting difference from control after each HW
+
+# Example y-axis limits for demonstration; adjust these based on your data
+Y_min<-min(c(plot_resitance$resist),na.rm = T)-0.001
+Y_max<-max(c(plot_resitance$resist),na.rm = T)+0.001
+
+# Define your plots (assuming plot_resistance_38, plot_resistance_24, and plot_resistance_10 datasets are available)
+plot_resistance_38 <- ggplot(data = plot_resistance_38,
+                             mapping = aes(x = Treatment, y = resist, fill = Treatment)) +
+  ylab("Compositional Difference D38") + 
+  xlab("") + 
+  theme_classic() +
+  theme(text = element_text(size = 16), 
+        axis.text = element_text(colour = "black"),
+        strip.background = element_blank(),
+        legend.position = "bottom") + 
+  geom_point(position = position_jitter(width = 0.35), size = 2, show.legend = FALSE) + 
+  geom_boxplot(alpha = 0.6) +
+  geom_abline(intercept=0, slope=0, linetype="dashed") + 
+  scale_shape_manual(values = c(16,17), guide=FALSE) +
+  scale_fill_viridis_d(end = 0.8, begin = 0.1, option = "magma", guide=FALSE) + 
+  scale_y_continuous(limits = c(Y_min, Y_max), breaks = pretty_breaks(n = 7))
+
+plot_resistance_24 <- ggplot(data = plot_resistance_24,
+                             mapping = aes(x = Treatment, y = resist, fill = Treatment)) +
+  ylab("Compositional Difference D24") + 
+  xlab("") + 
+  theme_classic() +
+  theme(text = element_text(size = 16), 
+        axis.text = element_text(colour = "black"),
+        strip.background = element_blank(),
+        legend.position = "bottom") + 
+  geom_point(position = position_jitter(width = 0.35), size = 2, show.legend = FALSE) + 
+  geom_boxplot(alpha = 0.6) +
+  geom_abline(intercept=0, slope=0, linetype="dashed") + 
+  scale_shape_manual(values = c(16,17), guide=FALSE) +
+  scale_fill_viridis_d(end = 0.8, begin = 0.1, option = "magma", guide=FALSE) + 
+  scale_y_continuous(limits = c(Y_min, Y_max), breaks = pretty_breaks(n = 7))
+
+plot_resistance_10 <- ggplot(data = plot_resistance_10,
+                             mapping = aes(x = Treatment, y = resist, fill = Treatment)) +
+  ylab("Compositional Difference D10") + 
+  xlab("") + 
+  theme_classic() +
+  theme(text = element_text(size = 16), 
+        axis.text = element_text(colour = "black"),
+        strip.background = element_blank(),
+        legend.position = "bottom") + 
+  geom_point(position = position_jitter(width = 0.35), size = 2, show.legend = FALSE) + 
+  geom_boxplot(alpha = 0.6) +
+  geom_abline(intercept=0, slope=0, linetype="dashed") + 
+  scale_shape_manual(values = c(16,17), guide=FALSE) +
+  scale_fill_viridis_d(end = 0.8, begin = 0.1, option = "magma", guide=FALSE) + 
+  scale_y_continuous(limits = c(Y_min, Y_max), breaks = pretty_breaks(n = 7))
+
+# Combine the plots
+combined_plot <- plot_resistance_10 + plot_resistance_24 + plot_resistance_38 + 
+  plot_layout(ncol = 3)
+
+print(combined_plot)
+
+
+
+
+
+
+
+#### Phyto complete Bray - Curtis ####
+
+
+### Phyto ###
+library(vegan)
+### Bray-Curtis dissimilarity calculation ###
+dd_bray <- read_excel("data/abundance_cosm.xlsx")
+dd_bray[is.na(dd_bray)] <- 0
+
+dd_phyto <- as.data.frame(dd_bray)
+
+days_FR <- unique(dd$Day)
+
+names(dd_phyto)
+
+# Include running index "m", set it to 1 
+
+m <- 1
+
+
+
+for (j in 1:length(days_FR)){  ## inner loop for days
+  
+  # Extract data for one single day
+  
+  mysite <- dd_phyto %>% 
+    filter( Day == days_FR[j])
+  
+  # Add row names to the data frame, useful later for the Bray-Curtis calculation
+  
+  rownames(mysite) <- paste(mysite$Treatment, mysite$Sample, mysite$Day, sep = "_")
+  
+  # Extract controls 
+  
+  control_cosm <- mysite %>% 
+    filter(Treatment == "Control")
+  
+  # Calculate average community composition (average abundance of each group/column)
+  # Important: only columns with species are included 
+  # ref.comm.all => includes all species
+  
+  
+  ref.comm.all <- control_cosm[,c(7:97)] %>% summarise_each(funs( mean( .,na.rm = TRUE)))
+  rownames(ref.comm.all) <- "REF.COMM.ALL"
+  
+  
+  # Add the reference community to your site
+  
+  z.all <- rbind(mysite[,c(7:97)], ref.comm.all)
+  
+  # Calculate Bray-Curtis Dissimilary using the function vegdist
+  
+  # Matrix of all Bray-Curtis Dissimilarities
+  
+  calc.BC.all <- as.matrix(vegdist(z.all, method = "bray", binary = F, na.rm = T))
+  
+  # Extract just the last column containing the pairwise comparison of each plot 
+  # to the average control community composition
+  
+  BC.mean.C.all <- calc.BC.all[1:12,"REF.COMM.ALL"]
+  
+  
+  # Add the BCs to the mysite dataset
+  
+  mysite$BC_meanC_all <- BC.mean.C.all
+  
+  
+  # This is optional: add the names from the BC vectors to mysite 
+  # to be sure you extracted the correct comparions of single communities to REF.COMM.
+  
+  mysite$community_all <- names(BC.mean.C.all)
+  
+  
+  if (m == 1){
+    df.sites <- mysite
+  }
+  
+  if (m > 1){
+    df.sites <- rbind(df.sites,mysite)
+  }
+  
+  # Increase m (the running index) by 1
+  
+  m <- m + 1
+}
+
+df.sites_phyto <-  df.sites 
+
+names(df.sites_phyto)
+Bray_Curtis_distances_phyto <- df.sites_phyto[,c(1:7,98:99)]
+
+names(Bray_Curtis_distances_phyto)
+
+# Function to calculate standard error
+se <- function(x) sqrt(var(x, na.rm = TRUE) / length(na.omit(x)))
+
+# Calculate mean abundance and standard error for Control
+control_mean_bray <- Bray_Curtis_distances_phyto %>% filter(Treatment == "Control") %>%
+  group_by(Day) %>%
+  summarize(control_mean_bray = mean(BC_meanC_all, na.rm = TRUE))
+
+# Calculate differences from Control for each treatment
+tot.bray_diff <- Bray_Curtis_distances_phyto %>%
+  left_join(control_mean_bray, by = "Day") %>%
+  mutate(diff_bray = BC_meanC_all - control_mean_bray)
+
+# Summarize the data for plotting
+tot_bray_dynamics <- tot.bray_diff %>%
+  group_by(Treatment, Day) %>%
+  summarize(mean_diff_bray = mean(diff_bray, na.rm = TRUE), se = se(diff_bray)) %>%
+  mutate(lower_y = mean_diff_bray - se, upper_y = mean_diff_bray + se)
+
+# Determine the y-axis limits to ensure alignment of zero line
+y_limits <- range(tot_bray_dynamics$mean_diff_bray + tot_bray_dynamics$se, 
+                  tot_bray_dynamics$mean_diff_bray - tot_bray_dynamics$se)
+
+# Filter out the control treatment for the plot
+tot_bray_dynamics_filtered <- tot_bray_dynamics %>% filter(Treatment == "HW/C0")
+data_bray_plot <- tot_bray_dynamics_filtered %>% filter(Day <= 60)
+
+bray_plot <- ggplot(data_bray_plot, aes(x = Day, y = mean_diff_bray, color = Treatment, fill = Treatment)) +
+  geom_line(aes(group = Treatment), size = 1) +
+  geom_point()+
+  geom_ribbon(aes(ymin = lower_y, ymax = upper_y, group = Treatment), alpha = 0.1, show.legend = FALSE) +
+  ylab("Phytoplankton \nDifference in Bray - Curtis dissimilarity") +
+  xlab("Day") +
+  viridis::scale_colour_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  viridis::scale_fill_viridis(name = "Treatment", discrete = TRUE, end = 0.8, begin = 0.1, option = "inferno") +
+  scale_x_continuous(limits = c(-5, 60)) +
+  theme(legend.position = "top") +
+  theme_bw() +
+  guides(fill = guide_legend(override.aes = list(size = 8), ncol = 6)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~ Treatment, scales = "fixed") + 
+  coord_cartesian(ylim = y_limits) +  # Set the y-axis limits to align the zero line
+  annotate("rect", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  annotate("rect", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.1, fill = "red") +
+  theme(legend.position = "none")
+
+
+bio_bray_plot <- biomass_plot / bray_plot
+ggsave("bio_bray_plot.png", bio_bray_plot, width = 12, height = 8)
+ggsave("bio_bray_plot.pdf", bio_bray_plot, width = 12, height = 8)
+
+### Resistance ###
+
+# select control as reference 
+control_bc <- Bray_Curtis_distances_phyto %>% 
+  filter(Treatment == "Control") %>%
+  group_by(Day) %>% 
+  dplyr::summarize(mean_bc_control = mean(BC_meanC_all, na.rm = T))
+# select all other treatments
+bc_all_treat <- Bray_Curtis_distances_phyto %>% 
+  group_by(Day, Sample, Treatment, Heat.treatment, Warm.treatment, Ins.treatment) %>% 
+  dplyr::summarize(mean_bc = mean(BC_meanC_all, na.rm = T))
+
+bc_data_phyto <- merge(bc_all_treat, control_bc, by = "Day")
+
+
+# resistance defined as the difference between stressed and control divided by the control (i.e. Pennekamp et al 2018)
+bc_data_phyto <- bc_data_phyto %>% filter(Treatment != "E/C0")
+bc_resist_10 <-  bc_data_phyto %>% 
+  dplyr::filter(Day == 10) 
+bc_resist_10 <- bc_resist_10 %>% 
+  mutate(resist= ((bc_resist_10$mean_bc-bc_resist_10$mean_bc_control)/bc_resist_10$mean_bc_control)*-1)
+
+
+# plot resistance
+Y_min<-min(c(bc_resist_10$resist),na.rm = T)-0.001
+Y_max<-max(c(bc_resist_10$resist),na.rm = T)+0.001
+
+
+# Since resistence was calculated in relation to the control, we are going to exculde the controls,
+# but we put a line with y = 0 which is the benchmark for control values
+plot_resistance_10 <- bc_resist_10
+
+
+
+
+
+bc_resist_24 <-  bc_data_phyto %>% 
+  dplyr::filter(Day == 24) 
+bc_resist_24 <- bc_resist_24 %>% 
+  mutate(resist= ((bc_resist_24$mean_bc-bc_resist_24$mean_bc_control)/bc_resist_24$mean_bc_control)*-1)
+
+
+
+# Since resistence was calculated in relation to the control, we are going to exculde the controls,
+# but we put a line with y = 0 which is the benchmark for control values
+plot_resistance_24 <- bc_resist_24
+
+
+
+
+
+
+bc_resist_38 <-  bc_data_phyto %>% 
+  dplyr::filter(Day == 38) 
+bc_resist_38 <- bc_resist_38 %>% 
+  mutate(resist= ((bc_resist_38$mean_bc-bc_resist_38$mean_bc_control)/bc_resist_38$mean_bc_control)*-1)
+
+
+
+
+# Since resistence was calculated in relation to the control, we are going to exculde the controls,
+# but we put a line with y = 0 which is the benchmark for control values
+plot_resistance_38 <- bc_resist_38
+
+
+plot_resitance <- rbind(bc_resist_10, bc_resist_24, bc_resist_38)
+# plot resistance
+Y_min<-min(c(plot_resitance$resist),na.rm = T)-0.001
+Y_max<-max(c(plot_resitance$resist),na.rm = T)+0.001
+
+ggplot(data = plot_resitance,
+       mapping = aes(x = Treatment, y = resist, fill = Treatment)) +
+  ylab("Compositional Difference") + 
+  xlab("") + 
+  theme_bw() +
+  facet_wrap(~ Day, scales = "fixed") + 
+  theme(text = element_text(size = 16), 
+        axis.text = element_text(colour = "black"),
+        strip.background = element_blank(),
+        legend.position = "bottom") + 
+  geom_point(position = position_jitter(width = 0.35), size = 2, show.legend = FALSE) + 
+  geom_boxplot(alpha = 0.6) +
+  geom_abline(intercept=0, slope=0, linetype="dashed") + 
+  scale_shape_manual(values = c(16,17), guide=FALSE) +
+  scale_fill_viridis_d(end = 0.8, begin = 0.1, option = "magma", guide=FALSE) + 
+  scale_y_continuous(limits = c(Y_min, Y_max), breaks = pretty_breaks(n = 7))
+
+
+
+# Plotting difference from control after each HW
+
+# Example y-axis limits for demonstration; adjust these based on your data
+Y_min <- -1
+Y_max <- 0.75
+
+# Define your plots (assuming plot_resistance_38, plot_resistance_24, and plot_resistance_10 datasets are available)
+plot_resistance_38 <- ggplot(data = plot_resistance_38,
+                             mapping = aes(x = Treatment, y = resist, fill = Treatment)) +
+  ylab("Compositional Difference D38") + 
+  xlab("") + 
+  theme_classic() +
+  theme(text = element_text(size = 16), 
+        axis.text = element_text(colour = "black"),
+        strip.background = element_blank(),
+        legend.position = "bottom") + 
+  geom_point(position = position_jitter(width = 0.35), size = 2, show.legend = FALSE) + 
+  geom_boxplot(alpha = 0.6) +
+  geom_abline(intercept=0, slope=0, linetype="dashed") + 
+  scale_shape_manual(values = c(16,17), guide=FALSE) +
+  scale_fill_viridis_d(end = 0.8, begin = 0.1, option = "magma", guide=FALSE) + 
+  scale_y_continuous(limits = c(Y_min, Y_max), breaks = pretty_breaks(n = 7))
+
+plot_resistance_24 <- ggplot(data = plot_resistance_24,
+                             mapping = aes(x = Treatment, y = resist, fill = Treatment)) +
+  ylab("Compositional Difference D24") + 
+  xlab("") + 
+  theme_classic() +
+  theme(text = element_text(size = 16), 
+        axis.text = element_text(colour = "black"),
+        strip.background = element_blank(),
+        legend.position = "bottom") + 
+  geom_point(position = position_jitter(width = 0.35), size = 2, show.legend = FALSE) + 
+  geom_boxplot(alpha = 0.6) +
+  geom_abline(intercept=0, slope=0, linetype="dashed") + 
+  scale_shape_manual(values = c(16,17), guide=FALSE) +
+  scale_fill_viridis_d(end = 0.8, begin = 0.1, option = "magma", guide=FALSE) + 
+  scale_y_continuous(limits = c(Y_min, Y_max), breaks = pretty_breaks(n = 7))
+
+plot_resistance_10 <- ggplot(data = plot_resistance_10,
+                             mapping = aes(x = Treatment, y = resist, fill = Treatment)) +
+  ylab("Compositional Difference D10") + 
+  xlab("") + 
+  theme_classic() +
+  theme(text = element_text(size = 16), 
+        axis.text = element_text(colour = "black"),
+        strip.background = element_blank(),
+        legend.position = "bottom") + 
+  geom_point(position = position_jitter(width = 0.35), size = 2, show.legend = FALSE) + 
+  geom_boxplot(alpha = 0.6) +
+  geom_abline(intercept=0, slope=0, linetype="dashed") + 
+  scale_shape_manual(values = c(16,17), guide=FALSE) +
+  scale_fill_viridis_d(end = 0.8, begin = 0.1, option = "magma", guide=FALSE) + 
+  scale_y_continuous(limits = c(Y_min, Y_max), breaks = pretty_breaks(n = 7))
+
+# Combine the plots
+combined_plot <- plot_resistance_10 + plot_resistance_24 + plot_resistance_38 + 
+  plot_layout(ncol = 3)
+
+print(combined_plot)
+
+
+
+
+
+group_bio
+
+group_bio <- group_bio %>% filter(group != "Ciliophora")
+
+# Calculate relative abundance
+group_bio2 <- group_bio %>%
+  group_by( Treatment, Day) %>%
+  mutate(total = sum(total_biomass)) %>%
+  mutate(relative_bio = total_biomass / total * 100) %>%
+  ungroup() 
+
+
+
+
+# Ensure Treatment is a factor
+group_bio2$Treatment <- as.factor(group_bio2$Treatment)
+
+# Create the plot
+p <- ggplot(group_bio2, aes(x = Treatment, y = relative_bio, fill = group)) +
+  geom_bar(stat = "identity", position = "stack") +
+  facet_wrap(~ paste("Day", Day), scales = "free_x") +  # Include "Day" before the Day number
+  labs(x = "", y = "Relative Biomass (%)") +
+  theme_bw(base_size = 20) +
+  theme(
+    panel.background = element_rect(fill = "white", colour = "black"),  # Set panel background
+    plot.title = element_text(hjust = 0.5, margin = margin(b = 20), size = 20, face = "bold"),  # Set plot title text size and make it bold
+    axis.text = element_text(size = 30),  # Set axis text size
+    axis.title = element_text(size = 30),  # Set axis title text size
+    strip.text = element_text(size = 30),  # Set facet strip text size
+    legend.text = element_text(size = 30),  # Set legend text size
+    legend.title = element_text(size = 30),  # Set legend title text size
+    legend.key.size = unit(1.5, "lines"),  # Increase legend key size
+    legend.position = "bottom",  # Move legend to the bottom
+    legend.justification = "center",  # Center justify the legend
+    legend.direction = "horizontal",  # Arrange legend items horizontally
+    legend.box = "vertical",  # Align legend items vertically within the box
+    axis.text.x = element_text(hjust = 1)  # Rotate x-axis text
+  ) +
+  scale_fill_brewer(palette = "Set1")  # Apply a ColorBrewer palette
+
+
+# Display the plot
+print(p)

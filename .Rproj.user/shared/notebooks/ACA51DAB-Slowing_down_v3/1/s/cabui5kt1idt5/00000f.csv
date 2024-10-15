@@ -1,0 +1,2 @@
+"0","ox_mod <- ox %>% filter(Day %in% c(-4, 10, 24, 38))"
+"0","model_ox <- lmer(log(ox) ~ Treatment * Day + (1 | Cosm), data = ox_mod)"
