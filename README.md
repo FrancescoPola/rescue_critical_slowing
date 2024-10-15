@@ -5,7 +5,7 @@ Content:
 
 data: contains the datasets used in the manuscript.
 
-Slowing_down_v3_files: contains figures produced during the analysis as well as the figures used in the manuscript. All figures are produced using the RMarkdown file called "Slowing_down_v2". Please note that for the submission the figures have been additionally edited in PowerPoint. 
+Slowing_down_v3_files: contains figures produced during the analysis as well as the figures used in the manuscript. All figures are produced using the RMarkdown file called "Slowing_down_v3". Please note that for the submission the figures have been additionally edited in PowerPoint. 
 
 Tables: contains the result table produced in the analysis through the "Slowing_down_v3.Rmd" file. 
 

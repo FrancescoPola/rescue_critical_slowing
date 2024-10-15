@@ -65,4 +65,9 @@
 "0","  annotate(""rect"", xmin = 0, xmax = 6, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = ""red"") +"
 "0","  annotate(""rect"", xmin = 14, xmax = 20, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = ""red"") +"
 "0","  annotate(""rect"", xmin = 28, xmax = 34, ymin = -Inf, ymax = Inf, alpha = 0.3, fill = ""red"") + labs(tag = ""(a)"")"
-"0",""
+"2","Warning:"
+"2"," [38;5;250mThe `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+[36mℹ[38;5;250m Please use the `linewidth` argument instead.
+[90mThis warning is displayed once every 8 hours.[38;5;250m
+[90mCall `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.[38;5;250m[39m
+"
