@@ -1,2 +1,0 @@
-"0",""
-"0","model_ox <- lmer(log(ox) ~ Treatment * Day + (1 | Cosm), data = ox)"

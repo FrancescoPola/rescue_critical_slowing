@@ -1,4 +1,0 @@
-"0",""
-"0","model_phyto_bio <- lmer((total) ~ Treatment * Day + (1 | Sample), data = try)"
-"2","boundary (singular) fit: see help('isSingular')
-"
